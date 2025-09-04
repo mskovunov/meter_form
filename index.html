@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Передача показаний</title>
+</head>
+<body>
+    <h2>Форма для передачи показаний</h2>
+    <form id="meterForm">
+        <label>ФИО или адрес:<br>
+            <input type="text" name="name" required>
+        </label><br><br>
+        <label>Показания:<br>
+            <input type="number" name="reading" required>
+        </label><br><br>
+        <button type="submit">Отправить</button>
+    </form>
+    <p id="status"></p>
+
+    <script>
+        document.getElementById("meterForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                name: form.name.value,
+                reading: form.reading.value
+            };
+
+            fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+                method: "POST",
+                body: JSON.stringify(data),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(res => res.text())
+            .then(result => {
+                document.getElementById("status").innerText = "Успешно отправлено!";
+                form.reset();
+            })
+            .catch(err => {
+                document.getElementById("status").innerText = "Ошибка при отправке!";
+                console.error(err);
+            });
+        });
+    </script>
+</body>
+</html>
