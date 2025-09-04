@@ -21,17 +21,15 @@
         document.getElementById("meterForm").addEventListener("submit", function (e) {
             e.preventDefault();
             const form = e.target;
-            const data = {
-                name: form.name.value,
-                reading: form.reading.value
-            };
+
+            // Создаем form-urlencoded данные
+            const formData = new URLSearchParams();
+            formData.append("name", form.name.value);
+            formData.append("reading", form.reading.value);
 
             fetch("https://script.google.com/macros/s/AKfycbxI_1dfFQvbwGlDOcSCo2g1fKzpz1N7xkzEeXzIj7FdjDrwyS4cMo9udIlddNwzKiQl/exec", {
                 method: "POST",
-                body: JSON.stringify(data),
-                headers: {
-                    "Content-Type": "application/json"
-                }
+                body: formData
             })
             .then(res => res.text())
             .then(result => {
