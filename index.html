@@ -6,12 +6,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <script>
-    // При загрузке страницы подставляем предыдущий показатель
-    function loadPreviousReading() {
-      google.script.run.withSuccessHandler(function(value) {
-        document.getElementById('prevReading').value = value;
-      }).getLastValToUse();
+    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec';
+
+    // Загружаем предыдущий показатель через fetch
+    async function loadPreviousReading() {
+      try {
+        const resp = await fetch(WEBAPP_URL + '?getLast=1');
+        const val = await resp.text();
+        document.getElementById('prevReading').value = val;
+      } catch (err) {
+        console.error('Ошибка при получении предыдущего показателя:', err);
+      }
     }
+
     window.onload = loadPreviousReading;
   </script>
 </head>
@@ -55,7 +62,7 @@
       let success = false;
 
       try {
-        await fetch("https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec", {
+        await fetch(WEBAPP_URL, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: data.toString(),
