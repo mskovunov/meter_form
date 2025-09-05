@@ -77,6 +77,20 @@ button:hover {
   min-height: 24px;
   color: #333;
   word-wrap: break-word;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out, color 0.5s;
+}
+
+#status.show {
+  opacity: 1;
+}
+
+#status.success {
+  color: #2e7d32; /* зелёный для успеха */
+}
+
+#status.error {
+  color: #c62828; /* красный для ошибки */
 }
 
 /* Адаптивно уменьшаем отступы на маленьких экранах */
