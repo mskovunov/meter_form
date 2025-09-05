@@ -8,7 +8,7 @@
   <h2>Форма для передачи показаний</h2>
 
   <form id="meterForm"
-        action="https://script.google.com/macros/s/AKfycbwGhtT6jthjUqTMUPOnQTgtaYqMKo-BB8R7G8PwWLFcBjr01SEayZHHlj2Q_34IKqrZ/exec"
+        action="https://script.google.com/macros/s/AKfycbwSJX8yxRV_JeE18BhbZ1GWKEnQgJAVxernk19XKhhKRwC7k2J8V5B08f88NeegUzA/exec"
         method="POST"
         target="submitWindow">
       <label>ФИО или адрес:<br>
@@ -26,16 +26,18 @@
     const form = document.getElementById("meterForm");
 
     form.addEventListener("submit", function(e) {
-      // Открываем новое окно заранее, чтобы не блокировалось браузером
-      const popup = window.open('', 'submitWindow', 'width=500,height=300');
+      // Открываем новое окно ЗАРАНЕЕ, чтобы не было блокировки
+      const popup = window.open('about:blank', 'submitWindow', 'width=500,height=300');
 
-      // Если окно открылось — оно будет использовано для ответа GAS
-      // В противном случае — форма просто уйдёт в target="submitWindow"
+      // Можно заранее отобразить текст в popup
+      if (popup) {
+        popup.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
+      }
 
-      // Ставим фокус обратно на основное окно
+      // Ставим фокус обратно на основную форму
       setTimeout(() => window.focus(), 100);
 
-      // Очищаем форму через 1 сек
+      // Очищаем поля формы и отображаем статус
       setTimeout(() => {
         form.reset();
         document.getElementById("status").innerText = "✅ Данные успешно отправлены!";
