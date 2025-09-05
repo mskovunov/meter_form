@@ -5,18 +5,33 @@
   <title>Передача показників</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // При загрузке страницы подставляем предыдущий показатель
+    function loadPreviousReading() {
+      google.script.run.withSuccessHandler(function(value) {
+        document.getElementById('prevReading').value = value;
+      }).getLastValToUse();
+    }
+    window.onload = loadPreviousReading;
+  </script>
 </head>
 <body>
   <div class="container">
     <h2>Форма для передачі показників лічильника</h2>
 
     <form id="meterForm">
+      <label>Попередній показник:
+        <input type="number" id="prevReading" readonly placeholder="Завантаження...">
+      </label>
+
+      <label>Новий показник:
+        <input type="number" name="reading" required step="0.1" placeholder="Наприклад: 4.5">
+      </label>
+
       <label>Користувач:
         <input type="text" name="name" required placeholder="Ваше ім'я">
       </label>
-      <label>Показник:
-        <input type="number" name="reading" required step="0.1" placeholder="Наприклад: 4.5">
-      </label>
+
       <button type="submit">Відправити</button>
     </form>
 
@@ -31,9 +46,7 @@
       e.preventDefault();
 
       const win = window.open('', '', 'width=500,height=300');
-      if (win) {
-        win.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
-      }
+      if (win) win.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
 
       const data = new URLSearchParams();
       data.append("name", form.name.value);
@@ -51,17 +64,12 @@
       } catch (err) {
         console.error("Ошибка при отправке:", err);
       } finally {
-        // Устанавливаем текст и цвет статуса
         status.innerText = success ? "✅ Данні успішно відправлені!" : "⚠️ Данні відправлені з попередженням!";
         status.classList.remove("success", "error");
         status.classList.add(success ? "success" : "error");
 
         form.reset();
-
-        // Показать статус
         status.classList.add("show");
-
-        // Скрыть через 3 секунды
         setTimeout(() => status.classList.remove("show"), 3000);
 
         if (win) {
