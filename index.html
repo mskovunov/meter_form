@@ -1,41 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Передача показаний</title>
+  <meta charset="UTF-8">
+  <title>Передача показаний</title>
 </head>
 <body>
-    <h2>Форма для передачи показаний</h2>
+  <h2>Форма для передачи показаний</h2>
 
-    <!-- Отправка в скрытый iframe -->
-    <form action="https://script.google.com/macros/s/AKfycbyTuahb3jNkQwBhzKqIexbUMj6l8pgcskXYoIcv-YhnMkUE8ciWCFMrVaaU9-M9Y6AH/exec" 
-          method="POST" 
-          target="hidden_iframe" 
-          onsubmit="showSendingMessage()">
-        <label>ФИО или адрес:<br>
-            <input type="text" name="name" required>
-        </label><br><br>
-        <label>Показания:<br>
-            <input type="number" name="reading" required>
-        </label><br><br>
-        <button type="submit">Отправить</button>
-    </form>
+  <form action="https://script.google.com/macros/s/AKfycbz4u-1Qsdircbugf1bHJrDSbb63lHBYE16CmGSQ5rZYQF0BxTFZ_VchnAN1QkwKywUg/exec" 
+        method="POST">
+      <label>ФИО или адрес:<br>
+          <input type="text" name="name" required>
+      </label><br><br>
+      <label>Показания:<br>
+          <input type="number" name="reading" required>
+      </label><br><br>
+      <button type="submit">Отправить</button>
+  </form>
 
-    <iframe name="hidden_iframe" style="display:none;"></iframe>
+  <p id="status"></p>
 
-    <p id="status"></p>
-
-    <script>
-        function showSendingMessage() {
-            document.getElementById("status").innerText = "Отправка...";
-        }
-
-        window.addEventListener("message", function(event) {
-            if (event.data === "OK") {
-                document.getElementById("status").innerText = "Успешно отправлено!";
-                document.querySelector("form").reset();
-            }
-        }, false);
-    </script>
+  <script>
+    // Отображаем сообщение, если форма была отправлена
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("sent") === "1") {
+        document.getElementById("status").innerText = "✅ Успешно отправлено!";
+    }
+  </script>
 </body>
 </html>
