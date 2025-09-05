@@ -1,0 +1,25 @@
+function doPost(e) {
+  const sheet = SpreadsheetApp.openById("1HgJDnd3ua_Z7OFU1nSEW1jaHVgiFzx_FBthYTnPMaxo").getSheetByName("Парковка");
+
+  sheet.appendRow([
+    new Date(),
+    e.parameter.name || '',
+    e.parameter.reading || ''
+  ]);
+
+  return HtmlService.createHtmlOutput(`
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Спасибо</title>
+      </head>
+      <body>
+        <h2>Спасибо! Данные успешно отправлены.</h2>
+        <p>Вы можете закрыть это окно.</p>
+        <script>
+          setTimeout(() => window.close(), 3000);
+        </script>
+      </body>
+    </html>
+  `);
+}
