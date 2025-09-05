@@ -1,69 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Передача показаний</title>
-</head>
-<body>
-  <h2>Форма для передачи показаний</h2>
+@{
+    ViewData["Title"] = "Ввод показаний счетчика";
+}
 
-  <form id="meterForm">
-    <label>ФИО или адрес:<br>
-      <input type="text" name="name" required>
-    </label><br><br>
-    <label>Показания:<br>
-      <input type="number" name="reading" required>
-    </label><br><br>
+<h1>@ViewData["Title"]</h1>
+
+<div id="statusMessage" style="margin-bottom:10px;color:green;"></div>
+
+<form id="meterForm">
+    <label for="meterNumber">Номер счетчика:</label><br />
+    <input type="text" id="meterNumber" name="meterNumber" required /><br /><br />
+
+    <label for="readingDate">Дата:</label><br />
+    <input type="date" id="readingDate" name="readingDate" required /><br /><br />
+
+    <label for="readingValue">Показание:</label><br />
+    <input type="number" id="readingValue" name="readingValue" required /><br /><br />
+
     <button type="submit">Отправить</button>
-  </form>
+</form>
 
-  <p id="status"></p>
+<script>
+const form = document.getElementById('meterForm');
+const statusMessage = document.getElementById('statusMessage');
+const scriptURL = 'https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec';
 
-  <script>
-    const form = document.getElementById("meterForm");
-    const status = document.getElementById("status");
+form.addEventListener('submit', async e => {
+    e.preventDefault();
+    statusMessage.style.color = 'green';
+    statusMessage.textContent = 'Отправка...';
 
-    form.addEventListener("submit", async function(e) {
-      e.preventDefault();
+    const formData = new FormData(form);
 
-      // Открываем popup и сразу показываем процесс
-      const win = window.open('', '', 'width=500,height=300');
-      if (win) {
-        win.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
-      }
+    try {
+        const response = await fetch(scriptURL, { method: 'POST', body: formData });
+        const text = await response.text();
 
-      const data = new URLSearchParams();
-      data.append("name", form.name.value);
-      data.append("reading", form.reading.value);
+        if (response.ok && text.includes('success')) {
+            statusMessage.style.color = 'green';
+            statusMessage.textContent = '✅ Данные успешно отправлены!';
+            form.reset();
+        } else {
+            statusMessage.style.color = 'red';
+            statusMessage.textContent = '❌ Ошибка при отправке. Попробуйте снова.';
+            console.error('Ошибка ответа GAS:', text);
+        }
+    } catch (err) {
+        statusMessage.style.color = 'red';
+        statusMessage.textContent = '❌ Ошибка при отправке. Попробуйте снова.';
+        console.error('Ошибка fetch:', err);
+    }
 
-      try {
-        // Отправка данных на Google Script
-        await fetch("https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: data.toString(),
-        });
-
-        // Очистка формы и сообщение пользователю
-        form.reset();
-        status.innerText = "✅ Данные успешно отправлены!";
-
-      } catch (err) {
-        console.error("Ошибка при отправке:", err);
-        status.innerText = "❌ Ошибка при отправке данных!";
-      }
-
-      // В popup всегда показываем финальный экран и закрываем через 5 секунд
-      if (win) {
-        win.document.body.innerHTML = `
-          <h2>✅ Данные отправлены</h2>
-          <p>Это окно закроется через 5 секунд...</p>
-        `;
-        setTimeout(() => win.close(), 5000);
-      }
-    });
-  </script>
-</body>
-</html>
+    // Скрыть сообщение через 5 секунд
+    setTimeout(() => { statusMessage.textContent = ''; }, 5000);
+});
+</script>
