@@ -26,10 +26,8 @@
     form.addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      // Открываем новое окно — пользовательское действие
+      // Открываем popup и сразу показываем процесс
       const win = window.open('', '', 'width=500,height=300');
-
-      // Показываем в нем заглушку
       if (win) {
         win.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
       }
@@ -39,6 +37,7 @@
       data.append("reading", form.reading.value);
 
       try {
+        // Отправка данных на Google Script
         await fetch("https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec", {
           method: "POST",
           headers: {
@@ -47,25 +46,22 @@
           body: data.toString(),
         });
 
-        // Показываем успешное сообщение в основном окне
+        // Очистка формы и сообщение пользователю
         form.reset();
         status.innerText = "✅ Данные успешно отправлены!";
 
-        // Показываем финальный экран в popup и закрываем через 5 секунд
-        if (win) {
-          win.document.body.innerHTML = `
-            <h2>✅ Данные отправлены</h2>
-            <p>Это окно закроется через 5 секунд...</p>
-          `;
-          setTimeout(() => win.close(), 5000);
-        }
-
       } catch (err) {
-        status.innerText = "❌ Ошибка при отправке.";
-        console.error(err);
-        if (win) {
-          win.document.body.innerHTML = `<p>❌ Ошибка при отправке.</p>`;
-        }
+        console.error("Ошибка при отправке:", err);
+        status.innerText = "❌ Ошибка при отправке данных!";
+      }
+
+      // В popup всегда показываем финальный экран и закрываем через 5 секунд
+      if (win) {
+        win.document.body.innerHTML = `
+          <h2>✅ Данные отправлены</h2>
+          <p>Это окно закроется через 5 секунд...</p>
+        `;
+        setTimeout(() => win.close(), 5000);
       }
     });
   </script>
