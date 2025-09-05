@@ -7,7 +7,8 @@
 <body>
     <h2>Форма для передачи показаний</h2>
 
-    <form id="meterForm" target="_blank">
+    <!-- Прямая отправка на GAS, target="_blank" чтобы не перезагружать страницу -->
+    <form action="https://script.google.com/macros/s/AKfycbxfrZH25NpFPXp_QhDajcTJb6crVISiXm2A5zdbEdUrHdz7Wis8m5nrAH40NATCagOz/exec" method="POST" target="hidden_iframe">
         <label>ФИО или адрес:<br>
             <input type="text" name="name" required>
         </label><br><br>
@@ -17,43 +18,27 @@
         <button type="submit">Отправить</button>
     </form>
 
+    <!-- Скрытый iframe для обработки отправки без перезагрузки -->
+    <iframe name="hidden_iframe" style="display:none;"></iframe>
+
+    <p id="status"></p>
+
     <script>
-        document.getElementById("meterForm").addEventListener("submit", function (e) {
-            // Собираем данные
-            const form = e.target;
-            const name = form.name.value;
-            const reading = form.reading.value;
+        // Отслеживаем отправку формы через iframe
+        const form = document.querySelector("form");
+        const status = document.getElementById("status");
 
-            // Открываем новое окно
-            const popup = window.open('', '_blank');
-
-            // Формируем данные в x-www-form-urlencoded формате
-            const formData = new URLSearchParams();
-            formData.append("name", name);
-            formData.append("reading", reading);
-
-            // Отправляем форму через POST в popup
-            const tempForm = document.createElement("form");
-            tempForm.method = "POST";
-            tempForm.action = "https://script.google.com/macros/s/AKfycbxfrZH25NpFPXp_QhDajcTJb6crVISiXm2A5zdbEdUrHdz7Wis8m5nrAH40NATCagOz/exec";
-            tempForm.target = popup.name;
-
-            // Добавляем скрытые input'ы
-            for (const [key, value] of formData.entries()) {
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = key;
-                input.value = value;
-                tempForm.appendChild(input);
-            }
-
-            document.body.appendChild(tempForm);
-            tempForm.submit();
-            document.body.removeChild(tempForm);
-
-            // Сброс основной формы
-            form.reset();
+        form.addEventListener("submit", () => {
+            status.innerText = "Отправка...";
         });
+
+        // Используем небольшой трюк: после отправки формы на iframe, GAS возвращает текст
+        window.addEventListener("message", function(event) {
+            if(event.data === "OK") {
+                status.innerText = "Успешно отправлено!";
+                form.reset();
+            }
+        }, false);
     </script>
 </body>
 </html>
