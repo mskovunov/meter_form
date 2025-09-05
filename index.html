@@ -2,19 +2,19 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Передача показаний</title>
+  <title>Передача показників</title>
 </head>
 <body>
-  <h2>Форма для передачи показаний</h2>
+  <h2>Форма для передачі показників лічильника</h2>
 
   <form id="meterForm">
-    <label>ФИО или адрес:<br>
+    <label>Користувач:<br>
       <input type="text" name="name" required>
     </label><br><br>
-    <label>Показания:<br>
+    <label>Показник:<br>
       <input type="number" name="reading" required>
     </label><br><br>
-    <button type="submit">Отправить</button>
+    <button type="submit">Відправити</button>
   </form>
 
   <p id="status"></p>
@@ -49,17 +49,17 @@
       } finally {
         // Статус и очистка формы всегда выполняются
         if (success) {
-          status.innerText = "✅ Данные успешно отправлены!";
+          status.innerText = "✅ Данні успішно відправлені!";
           form.reset();
         } else {
-          status.innerText = "⚠️ Данные отправлены с предупреждением!";
+          status.innerText = "⚠️ Данні відправлені з попередженням!";
           form.reset();
         }
 
         if (win) {
           win.document.body.innerHTML = `
-            <h2>${success ? "✅ Данные отправлены" : "⚠️ Данные отправлены с предупреждением."}</h2>
-            <p>Это окно закроется через 3 секунд...</p>
+            <h2>${success ? "✅ Данні успішно відправлені!" : "⚠️ Данні відправлені з попередженням!"}</h2>
+            <p>Це вікно закриється через 3 секунди...</p>
           `;
           setTimeout(() => win.close(), 3000);
         }
