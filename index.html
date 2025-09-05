@@ -53,14 +53,15 @@
           form.reset();
         } else {
           status.innerText = "⚠️ Данные отправлены, но возможны ошибки!";
+          form.reset();
         }
 
         if (win) {
           win.document.body.innerHTML = `
             <h2>${success ? "✅ Данные отправлены" : "⚠️ Данные отправлены с предупреждением"}</h2>
-            <p>Это окно закроется через 5 секунд...</p>
+            <p>Это окно закроется через 3 секунд...</p>
           `;
-          setTimeout(() => win.close(), 5000);
+          setTimeout(() => win.close(), 3000);
         }
       }
     });
