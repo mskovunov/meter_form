@@ -26,7 +26,7 @@
     form.addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      // Открываем новое окно — считается пользовательским действием
+      // Открываем новое окно — пользовательское действие
       const win = window.open('', '', 'width=500,height=300');
 
       // Показываем в нем заглушку
@@ -51,15 +51,13 @@
         form.reset();
         status.innerText = "✅ Данные успешно отправлены!";
 
-        // Показываем в popup финальный экран с кнопкой
+        // Показываем финальный экран в popup и закрываем через 5 секунд
         if (win) {
           win.document.body.innerHTML = `
             <h2>✅ Данные отправлены</h2>
             <p>Это окно закроется через 5 секунд...</p>
-            <script>
-              setTimeout(() => window.close(), 5000);
-            </script>
           `;
+          setTimeout(() => win.close(), 5000);
         }
 
       } catch (err) {
