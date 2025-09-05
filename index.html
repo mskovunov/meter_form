@@ -7,8 +7,7 @@
 <body>
   <h2>Форма для передачи показаний</h2>
 
-  <form action="https://script.google.com/macros/s/AKfycbyqvdRJ4ehS72D-Cw8_3bzyGprFIibYELj5S4YWpPFis1Ba7FQInRufO2pVUJ4u1-Q/exec" 
-        method="POST">
+  <form action="https://script.google.com/macros/s/AKfycbyR56TfhoCLmfo4aOyXzE1fnvtdTTBxOKGvCStJ4m6aHiE1GKayMFgfDxAhxPLEMcL2/exec" method="POST">
       <label>ФИО или адрес:<br>
           <input type="text" name="name" required>
       </label><br><br>
@@ -17,15 +16,5 @@
       </label><br><br>
       <button type="submit">Отправить</button>
   </form>
-
-  <p id="status"></p>
-
-  <script>
-    // Отображаем сообщение, если форма была отправлена
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("sent") === "1") {
-        document.getElementById("status").innerText = "✅ Успешно отправлено!";
-    }
-  </script>
 </body>
 </html>
