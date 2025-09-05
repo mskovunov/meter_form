@@ -7,8 +7,11 @@
 <body>
     <h2>Форма для передачи показаний</h2>
 
-    <!-- Прямая отправка на GAS через POST -->
-    <form action="https://script.google.com/macros/s/AKfycbzTakkXaPQ1sr-3qzGz2F1AfGRGBgBJouiIDcVkQyz9n3MGWYhUwtLfDnwFS0MPcp1_/exec" method="POST" target="_blank">
+    <!-- Отправка в скрытый iframe -->
+    <form action="https://script.google.com/macros/s/AKfycbyTuahb3jNkQwBhzKqIexbUMj6l8pgcskXYoIcv-YhnMkUE8ciWCFMrVaaU9-M9Y6AH/exec" 
+          method="POST" 
+          target="hidden_iframe" 
+          onsubmit="showSendingMessage()">
         <label>ФИО или адрес:<br>
             <input type="text" name="name" required>
         </label><br><br>
@@ -18,6 +21,21 @@
         <button type="submit">Отправить</button>
     </form>
 
-    <p id="status">После отправки форма откроется в новом окне со страницей подтверждения.</p>
+    <iframe name="hidden_iframe" style="display:none;"></iframe>
+
+    <p id="status"></p>
+
+    <script>
+        function showSendingMessage() {
+            document.getElementById("status").innerText = "Отправка...";
+        }
+
+        window.addEventListener("message", function(event) {
+            if (event.data === "OK") {
+                document.getElementById("status").innerText = "Успешно отправлено!";
+                document.querySelector("form").reset();
+            }
+        }, false);
+    </script>
 </body>
 </html>
