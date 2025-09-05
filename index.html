@@ -7,8 +7,10 @@
 <body>
   <h2>Форма для передачи показаний</h2>
 
-  <form id="meterForm" method="POST" target="hiddenWindow"
-        action="https://script.google.com/macros/s/AKfycbywYJDCx5qAba43QBLC9JnHL2mZ_Sl41GwBpgdU5E8O6rt8FNkAj5shLRKIS_ElCAx4/exec">
+  <form id="meterForm"
+        action="https://script.google.com/macros/s/AKfycbwGhtT6jthjUqTMUPOnQTgtaYqMKo-BB8R7G8PwWLFcBjr01SEayZHHlj2Q_34IKqrZ/exec"
+        method="POST"
+        target="submitWindow">
       <label>ФИО или адрес:<br>
           <input type="text" name="name" required>
       </label><br><br>
@@ -22,18 +24,22 @@
 
   <script>
     const form = document.getElementById("meterForm");
+
     form.addEventListener("submit", function(e) {
-      // Открываем окно в фоновом режиме (без фокуса)
-      const win = window.open('', 'hiddenWindow', 'width=400,height=300,noopener,noreferrer');
-      
+      // Открываем новое окно заранее, чтобы не блокировалось браузером
+      const popup = window.open('', 'submitWindow', 'width=500,height=300');
+
+      // Если окно открылось — оно будет использовано для ответа GAS
+      // В противном случае — форма просто уйдёт в target="submitWindow"
+
       // Ставим фокус обратно на основное окно
       setTimeout(() => window.focus(), 100);
 
-      // Очищаем поля формы после отправки
+      // Очищаем форму через 1 сек
       setTimeout(() => {
         form.reset();
-        document.getElementById("status").innerText = "✅ Данные отправлены!";
-      }, 500);
+        document.getElementById("status").innerText = "✅ Данные успешно отправлены!";
+      }, 1000);
     });
   </script>
 </body>
