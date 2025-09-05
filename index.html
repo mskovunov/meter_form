@@ -7,41 +7,68 @@
 <body>
   <h2>Форма для передачи показаний</h2>
 
-  <form id="meterForm"
-        action="https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec"
-        method="POST"
-        target="submitWindow">
-      <label>ФИО или адрес:<br>
-          <input type="text" name="name" required>
-      </label><br><br>
-      <label>Показания:<br>
-          <input type="number" name="reading" required>
-      </label><br><br>
-      <button type="submit">Отправить</button>
+  <form id="meterForm">
+    <label>ФИО или адрес:<br>
+      <input type="text" name="name" required>
+    </label><br><br>
+    <label>Показания:<br>
+      <input type="number" name="reading" required>
+    </label><br><br>
+    <button type="submit">Отправить</button>
   </form>
 
-  <p id="status">📨 После отправки данные запишутся в Google Таблицу</p>
+  <p id="status"></p>
 
   <script>
     const form = document.getElementById("meterForm");
+    const status = document.getElementById("status");
 
-    form.addEventListener("submit", function(e) {
-      // Открываем новое окно ЗАРАНЕЕ, чтобы не было блокировки
-      const popup = window.open('about:blank', 'submitWindow', 'width=500,height=300');
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
 
-      // Можно заранее отобразить текст в popup
-      if (popup) {
-        popup.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
+      // Открываем новое окно — считается пользовательским действием
+      const win = window.open('', '', 'width=500,height=300');
+
+      // Показываем в нем заглушку
+      if (win) {
+        win.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
       }
 
-      // Ставим фокус обратно на основную форму
-      setTimeout(() => window.focus(), 100);
+      const data = new URLSearchParams();
+      data.append("name", form.name.value);
+      data.append("reading", form.reading.value);
 
-      // Очищаем поля формы и отображаем статус
-      setTimeout(() => {
+      try {
+        await fetch("https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: data.toString(),
+        });
+
+        // Показываем успешное сообщение в основном окне
         form.reset();
-        document.getElementById("status").innerText = "✅ Данные успешно отправлены!";
-      }, 1000);
+        status.innerText = "✅ Данные успешно отправлены!";
+
+        // Показываем в popup финальный экран с кнопкой
+        if (win) {
+          win.document.body.innerHTML = `
+            <h2>✅ Данные отправлены</h2>
+            <p>Это окно закроется через 5 секунд...</p>
+            <script>
+              setTimeout(() => window.close(), 5000);
+            </script>
+          `;
+        }
+
+      } catch (err) {
+        status.innerText = "❌ Ошибка при отправке.";
+        console.error(err);
+        if (win) {
+          win.document.body.innerHTML = `<p>❌ Ошибка при отправке.</p>`;
+        }
+      }
     });
   </script>
 </body>
