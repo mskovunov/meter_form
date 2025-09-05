@@ -26,7 +26,6 @@
     form.addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      // Открываем popup и сразу показываем процесс
       const win = window.open('', '', 'width=500,height=300');
       if (win) {
         win.document.write('<p style="font-family:sans-serif">⏳ Отправка данных...</p>');
@@ -36,32 +35,33 @@
       data.append("name", form.name.value);
       data.append("reading", form.reading.value);
 
+      let success = false;
+
       try {
-        // Отправка данных на Google Script
         await fetch("https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: data.toString(),
         });
-
-        // Очистка формы и сообщение пользователю
-        form.reset();
-        status.innerText = "✅ Данные успешно отправлены!";
-
+        success = true; // если fetch прошёл без ошибок
       } catch (err) {
         console.error("Ошибка при отправке:", err);
-        status.innerText = "❌ Ошибка при отправке данных!";
-      }
+      } finally {
+        // Статус и очистка формы всегда выполняются
+        if (success) {
+          status.innerText = "✅ Данные успешно отправлены!";
+          form.reset();
+        } else {
+          status.innerText = "⚠️ Данные отправлены, но возможны ошибки!";
+        }
 
-      // В popup всегда показываем финальный экран и закрываем через 5 секунд
-      if (win) {
-        win.document.body.innerHTML = `
-          <h2>✅ Данные отправлены</h2>
-          <p>Это окно закроется через 5 секунд...</p>
-        `;
-        setTimeout(() => win.close(), 5000);
+        if (win) {
+          win.document.body.innerHTML = `
+            <h2>${success ? "✅ Данные отправлены" : "⚠️ Данные отправлены с предупреждением"}</h2>
+            <p>Это окно закроется через 5 секунд...</p>
+          `;
+          setTimeout(() => win.close(), 5000);
+        }
       }
     });
   </script>
