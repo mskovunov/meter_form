@@ -7,8 +7,8 @@
 <body>
     <h2>Форма для передачи показаний</h2>
 
-    <!-- Прямая отправка на GAS, target="_blank" чтобы не перезагружать страницу -->
-    <form action="https://script.google.com/macros/s/AKfycbzW-zMTxbAiiHHoxc31-sOc_aU5LXTSqPiS0GwRA7ehb38CPlOAZrrr0vldAxYeWdXE/exec">
+    <!-- Прямая отправка на GAS через POST -->
+    <form action="https://script.google.com/macros/s/AKfycbzW-zMTxbAiiHHoxc31-sOc_aU5LXTSqPiS0GwRA7ehb38CPlOAZrrr0vldAxYeWdXE/exec" method="POST" target="_blank">
         <label>ФИО или адрес:<br>
             <input type="text" name="name" required>
         </label><br><br>
@@ -18,27 +18,6 @@
         <button type="submit">Отправить</button>
     </form>
 
-    <!-- Скрытый iframe для обработки отправки без перезагрузки -->
-    <iframe name="hidden_iframe" style="display:none;"></iframe>
-
-    <p id="status"></p>
-
-    <script>
-        // Отслеживаем отправку формы через iframe
-        const form = document.querySelector("form");
-        const status = document.getElementById("status");
-
-        form.addEventListener("submit", () => {
-            status.innerText = "Отправка...";
-        });
-
-        // Используем небольшой трюк: после отправки формы на iframe, GAS возвращает текст
-        window.addEventListener("message", function(event) {
-            if(event.data === "OK") {
-                status.innerText = "Успешно отправлено!";
-                form.reset();
-            }
-        }, false);
-    </script>
+    <p id="status">После отправки форма откроется в новом окне со страницей подтверждения.</p>
 </body>
 </html>
