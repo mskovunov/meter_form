@@ -1,6 +1,5 @@
 function doPost(e) {
   const sheet = SpreadsheetApp.openById("1HgJDnd3ua_Z7OFU1nSEW1jaHVgiFzx_FBthYTnPMaxo").getSheetByName("Парковка");
-
   sheet.appendRow([
     new Date(),
     e.parameter.name || '',
