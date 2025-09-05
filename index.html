@@ -7,8 +7,8 @@
 <body>
   <h2>Форма для передачи показаний</h2>
 
-  <form action="https://script.google.com/macros/s/AKfycbzC_D4Po8s0JEx3dm6Mo_dAwO01U-SAfTP5mmPAZG2BdgytxlFYQCPNNas7ppl6i0ZM/exec"
-        method="POST" target="formTarget">
+  <form id="meterForm" method="POST" target="hiddenWindow"
+        action="https://script.google.com/macros/s/AKfycbywYJDCx5qAba43QBLC9JnHL2mZ_Sl41GwBpgdU5E8O6rt8FNkAj5shLRKIS_ElCAx4/exec">
       <label>ФИО или адрес:<br>
           <input type="text" name="name" required>
       </label><br><br>
@@ -19,5 +19,22 @@
   </form>
 
   <p id="status">📨 После отправки данные запишутся в Google Таблицу</p>
+
+  <script>
+    const form = document.getElementById("meterForm");
+    form.addEventListener("submit", function(e) {
+      // Открываем окно в фоновом режиме (без фокуса)
+      const win = window.open('', 'hiddenWindow', 'width=400,height=300,noopener,noreferrer');
+      
+      // Ставим фокус обратно на основное окно
+      setTimeout(() => window.focus(), 100);
+
+      // Очищаем поля формы после отправки
+      setTimeout(() => {
+        form.reset();
+        document.getElementById("status").innerText = "✅ Данные отправлены!";
+      }, 500);
+    });
+  </script>
 </body>
 </html>
