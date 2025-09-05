@@ -1,0 +1,101 @@
+/* style.css */
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 10px;
+}
+
+.container {
+  background-color: #fff;
+  padding: 25px 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 15px;
+  text-align: left;
+  color: #555;
+  font-size: 1rem;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 12px 14px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border 0.3s;
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  border-color: #4a90e2;
+  outline: none;
+}
+
+button {
+  background-color: #4a90e2;
+  color: #fff;
+  padding: 14px 0;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #357ABD;
+  transform: translateY(-2px);
+}
+
+#status {
+  margin-top: 20px;
+  font-size: 1rem;
+  min-height: 24px;
+  color: #333;
+  word-wrap: break-word;
+}
+
+/* Адаптивно уменьшаем отступы на маленьких экранах */
+@media (max-width: 360px) {
+  .container {
+    padding: 20px 15px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    padding: 10px 12px;
+  }
+
+  button {
+    padding: 12px 0;
+    font-size: 1rem;
+  }
+}
