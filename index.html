@@ -20,22 +20,35 @@
     }
 
     async function loadHistory() {
-      const historyDiv = document.getElementById('history');
-      const button = document.getElementById('historyButton');
-      button.disabled = true;
-      button.innerText = '⏳ Завантаження...';
+      const historyBlock = document.getElementById('history');
+      const tableBody = document.querySelector('#history tbody');
+
+      if (historyBlock.dataset.loaded === 'true') {
+        // Только показываем/скрываем, если данные уже загружены
+        historyBlock.classList.toggle('visible');
+        return;
+      }
 
       try {
-        const resp = await fetch(WEBAPP_URL + '?history=1');
-        const html = await resp.text();
-        historyDiv.innerHTML = html;
-        historyDiv.style.display = 'block';
-        button.style.display = 'none';
+        const res = await fetch(WEBAPP_URL + '?getLastRows=1');
+        const data = await res.json();
+
+        const rowsHtml = data.map(row => {
+          const [date, name, was, now, diff] = row;
+          return `<tr>
+            <td>${date}</td>
+            <td>${name}</td>
+            <td>${was}</td>
+            <td>${now}</td>
+            <td>${parseFloat(diff).toFixed(1)}</td>
+          </tr>`;
+        }).join('');
+
+        tableBody.innerHTML = rowsHtml;
+        historyBlock.dataset.loaded = 'true';
+        historyBlock.classList.add('visible');
       } catch (err) {
-        historyDiv.innerHTML = '<p>⚠️ Помилка при завантаженні історії.</p>';
-        console.error('Помилка історії:', err);
-        button.disabled = false;
-        button.innerText = 'Переглянути історію';
+        console.error('Помилка завантаження історії:', err);
       }
     }
 
@@ -46,12 +59,22 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       loadPreviousReading();
-      if (localStorage.getItem('theme') === 'dark') {
+
+      // Тема
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark') {
         document.body.classList.add('dark');
       }
+
+      // Кнопка истории
+      document.getElementById('toggleHistoryBtn').addEventListener('click', function () {
+        this.classList.toggle('active');
+        loadHistory();
+      });
     });
   </script>
 </head>
+
 <body>
   <div class="container">
     <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
@@ -79,9 +102,23 @@
       <button type="submit">Відправити</button>
     </form>
 
-    <button id="historyButton" type="button" onclick="loadHistory()">📊 Переглянути історію</button>
+    <button id="toggleHistoryBtn" class="theme-toggle">📊 Переглянути історію</button>
 
-    <div id="history" style="display:none;"></div>
+    <div id="history" class="fade">
+      <h3>Останні показники</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Дата</th>
+            <th>Користувач</th>
+            <th>Було</th>
+            <th>Стало</th>
+            <th>Різниця</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
     <p id="status"></p>
   </div>
@@ -94,9 +131,7 @@
       e.preventDefault();
 
       const win = window.open('', '', 'width=500,height=300');
-      if (win) {
-        win.document.write('<p style="font-family:sans-serif">⏳ Відправка даних...</p>');
-      }
+      if (win) win.document.write('<p style="font-family:sans-serif">⏳ Відправка даних...</p>');
 
       const data = new URLSearchParams();
       data.append("name", form.name.value);
@@ -117,6 +152,7 @@
         status.innerText = success ? "✅ Дані успішно відправлені!" : "⚠️ Дані відправлені з попередженням!";
         status.classList.remove("success", "error");
         status.classList.add(success ? "success" : "error");
+
         form.reset();
         status.classList.add("show");
         setTimeout(() => status.classList.remove("show"), 3000);
@@ -131,5 +167,26 @@
       }
     });
   </script>
+
+  <style>
+    #history {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: scaleY(0.95);
+      transform-origin: top;
+      transition: max-height 0.5s ease, opacity 0.5s ease, transform 0.4s ease;
+    }
+
+    #history.visible {
+      max-height: 800px;
+      opacity: 1;
+      transform: scaleY(1);
+    }
+
+    #toggleHistoryBtn.active {
+      background-color: var(--button-hover);
+    }
+  </style>
 </body>
 </html>
