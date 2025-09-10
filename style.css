@@ -36,7 +36,8 @@ label {
 }
 
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+select {
   width: 100%;
   padding: 12px 14px;
   margin-top: 5px;
@@ -45,10 +46,25 @@ input[type="number"] {
   font-size: 1rem;
   transition: border 0.3s;
   box-sizing: border-box;
+  background-color: #fff;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Кастомная стрелочка для select */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200l5%206%205-6z%22%20fill%3D%22%23666%22/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px 6px;
+  padding-right: 36px;
+  cursor: pointer;
 }
 
 input[type="text"]:focus,
-input[type="number"]:focus {
+input[type="number"]:focus,
+select:focus {
   border-color: #4a90e2;
   outline: none;
 }
@@ -104,7 +120,8 @@ button:hover {
   }
 
   input[type="text"],
-  input[type="number"] {
+  input[type="number"],
+  select {
     padding: 10px 12px;
   }
 
