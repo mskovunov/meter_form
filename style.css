@@ -1,8 +1,29 @@
-/* style.css */
+:root {
+  --bg-color: #f4f6f8;
+  --text-color: #333;
+  --input-bg: #fff;
+  --input-border: #ccc;
+  --button-bg: #4a90e2;
+  --button-hover: #357ABD;
+  --status-success: #2e7d32;
+  --status-error: #c62828;
+}
+
+body.dark {
+  --bg-color: #1e1e1e;
+  --text-color: #eee;
+  --input-bg: #2a2a2a;
+  --input-border: #555;
+  --button-bg: #5a9df0;
+  --button-hover: #397ec8;
+  --status-success: #81c784;
+  --status-error: #ef5350;
+}
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f6f8;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,10 +33,10 @@ body {
 }
 
 .container {
-  background-color: #fff;
+  background-color: var(--input-bg);
   padding: 25px 20px;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
   text-align: center;
@@ -23,19 +44,18 @@ body {
 
 h2 {
   margin-bottom: 20px;
-  color: #333;
   font-size: 1.5rem;
+  color: var(--text-color);
 }
 
 label {
   display: block;
   margin-bottom: 15px;
   text-align: left;
-  color: #555;
+  color: var(--text-color);
   font-size: 1rem;
 }
 
-/* Общие стили для input и select */
 input[type="text"],
 input[type="number"],
 select {
@@ -43,17 +63,17 @@ select {
   padding: 12px 14px;
   margin-top: 5px;
   font-size: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
-  background-color: #fff;
+  background-color: var(--input-bg);
+  color: var(--text-color);
   box-sizing: border-box;
-  transition: border 0.3s;
+  transition: border 0.3s, background-color 0.3s;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
 }
 
-/* Кастомная стрелочка для select */
 select {
   background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200l5%206%205-6z%22%20fill%3D%22%23666%22/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -63,19 +83,14 @@ select {
   cursor: pointer;
 }
 
-/* Убираем лишнее поведение на мобильных */
-select:focus,
-input:focus {
-  border-color: #4a90e2;
-  outline: none;
-}
-
-select:focus-visible {
+input:focus,
+select:focus {
+  border-color: var(--button-bg);
   outline: none;
 }
 
 button {
-  background-color: #4a90e2;
+  background-color: var(--button-bg);
   color: #fff;
   padding: 14px 0;
   width: 100%;
@@ -88,7 +103,7 @@ button {
 }
 
 button:hover {
-  background-color: #357ABD;
+  background-color: var(--button-hover);
   transform: translateY(-2px);
 }
 
@@ -96,7 +111,7 @@ button:hover {
   margin-top: 20px;
   font-size: 1rem;
   min-height: 24px;
-  color: #333;
+  color: var(--text-color);
   word-wrap: break-word;
   opacity: 0;
   transition: opacity 0.5s ease-in-out, color 0.5s;
@@ -107,14 +122,31 @@ button:hover {
 }
 
 #status.success {
-  color: #2e7d32; /* зелёный для успеха */
+  color: var(--status-success);
 }
 
 #status.error {
-  color: #c62828; /* красный для ошибки */
+  color: var(--status-error);
 }
 
-/* Адаптивность для маленьких экранов */
+/* Кнопка темы */
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--input-border);
+  padding: 6px 10px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: background-color 0.3s;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Адаптивность */
 @media (max-width: 360px) {
   .container {
     padding: 20px 15px;
@@ -124,8 +156,7 @@ button:hover {
     font-size: 1.3rem;
   }
 
-  input[type="text"],
-  input[type="number"],
+  input,
   select {
     padding: 10px 12px;
   }
