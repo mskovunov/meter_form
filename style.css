@@ -35,18 +35,19 @@ label {
   font-size: 1rem;
 }
 
+/* Общие стили для input и select */
 input[type="text"],
 input[type="number"],
 select {
   width: 100%;
   padding: 12px 14px;
   margin-top: 5px;
+  font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
-  font-size: 1rem;
-  transition: border 0.3s;
-  box-sizing: border-box;
   background-color: #fff;
+  box-sizing: border-box;
+  transition: border 0.3s;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -62,10 +63,14 @@ select {
   cursor: pointer;
 }
 
-input[type="text"]:focus,
-input[type="number"]:focus,
-select:focus {
+/* Убираем лишнее поведение на мобильных */
+select:focus,
+input:focus {
   border-color: #4a90e2;
+  outline: none;
+}
+
+select:focus-visible {
   outline: none;
 }
 
@@ -109,7 +114,7 @@ button:hover {
   color: #c62828; /* красный для ошибки */
 }
 
-/* Адаптивно уменьшаем отступы на маленьких экранах */
+/* Адаптивность для маленьких экранов */
 @media (max-width: 360px) {
   .container {
     padding: 20px 15px;
