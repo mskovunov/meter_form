@@ -9,7 +9,6 @@
   <script>
     const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec';
 
-    // Получаем предыдущий показник
     async function loadPreviousReading() {
       try {
         const resp = await fetch(WEBAPP_URL + '?getLast=1');
@@ -20,17 +19,42 @@
       }
     }
 
+    async function loadHistory() {
+      try {
+        const resp = await fetch(WEBAPP_URL + '?getLastRows=1');
+        const rows = await resp.json();
+        const div = document.getElementById('history');
+
+        if (!rows.length) {
+          div.innerHTML = "<p>Немає даних</p>";
+          return;
+        }
+
+        let table = "<h3>Останні 5 записів</h3><table><thead><tr><th>Дата</th><th>Користувач</th><th>Попер.</th><th>Новий</th><th>Різниця</th></tr></thead><tbody>";
+        rows.reverse().forEach(row => {
+          table += `<tr>
+            <td>${row[0]}</td>
+            <td>${row[1]}</td>
+            <td>${row[2]}</td>
+            <td>${row[3]}</td>
+            <td>${row[4]}</td>
+          </tr>`;
+        });
+        table += "</tbody></table>";
+        div.innerHTML = table;
+      } catch (err) {
+        console.error("Помилка завантаження історії:", err);
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       loadPreviousReading();
+      loadHistory();
 
-      // Применяем сохранённую тему
       const saved = localStorage.getItem('theme');
-      if (saved === 'dark') {
-        document.body.classList.add('dark');
-      }
+      if (saved === 'dark') document.body.classList.add('dark');
     });
 
-    // Переключатель темы
     function toggleTheme() {
       const body = document.body;
       const isDark = body.classList.toggle('dark');
@@ -67,6 +91,8 @@
     </form>
 
     <p id="status"></p>
+
+    <div id="history"></div>
   </div>
 
   <script>
@@ -111,6 +137,9 @@
           `;
           setTimeout(() => win.close(), 3000);
         }
+
+        loadPreviousReading();
+        loadHistory();
       }
     });
   </script>
