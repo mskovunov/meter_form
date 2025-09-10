@@ -32,11 +32,16 @@
       </label>
 
       <label>Новий показник:
-        <input type="number" name="reading" required step="0.1" placeholder="Наприклад: 4.5">
+        <input type="number" name="reading" required step="0.1" placeholder="Наприклад: 405.5">
       </label>
 
       <label>Користувач:
-        <input type="text" name="name" required placeholder="Ваше ім'я">
+        <select name="name" required>
+          <option value="" disabled selected>Оберіть користувача</option>
+          <option value="eGolf">eGolf</option>
+          <option value="iONIQ">iONIQ</option>
+          <option value="інше">інше</option>
+        </select>
       </label>
 
       <button type="submit">Відправити</button>
