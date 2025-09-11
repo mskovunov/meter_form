@@ -19,34 +19,23 @@
       }
     }
 
-    async function toggleHistory() {
+    async function loadHistory() {
       const historyDiv = document.getElementById('history');
       const button = document.getElementById('historyButton');
+      button.disabled = true;
+      button.innerText = '⏳ Завантаження...';
 
-      const isVisible = historyDiv.classList.contains('visible');
-
-      if (isVisible) {
-        // скрываем
-        historyDiv.classList.remove('visible');
-        button.classList.remove('active');
-        button.innerText = '📊 Переглянути історію';
-      } else {
-        button.disabled = true;
-        button.innerText = '⏳ Завантаження...';
-
-        try {
-          const resp = await fetch(WEBAPP_URL + '?history=1');
-          const html = await resp.text();
-          historyDiv.innerHTML = html;
-          historyDiv.classList.add('visible');
-          button.classList.add('active');
-          button.innerText = '📉 Сховати історію';
-        } catch (err) {
-          historyDiv.innerHTML = '<p>⚠️ Помилка при завантаженні історії.</p>';
-          console.error('Помилка історії:', err);
-        }
-
+      try {
+        const resp = await fetch(WEBAPP_URL + '?history=1');
+        const html = await resp.text();
+        historyDiv.innerHTML = html;
+        historyDiv.style.display = 'block';
+        button.style.display = 'none';
+      } catch (err) {
+        historyDiv.innerHTML = '<p>⚠️ Помилка при завантаженні історії.</p>';
+        console.error('Помилка історії:', err);
         button.disabled = false;
+        button.innerText = 'Переглянути історію';
       }
     }
 
@@ -62,27 +51,7 @@
       }
     });
   </script>
-
-  <style>
-    /* Плавное появление истории */
-    #history {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s ease-in-out, opacity 0.5s;
-      opacity: 0;
-    }
-
-    #history.visible {
-      max-height: 1000px; /* достаточно для таблицы */
-      opacity: 1;
-    }
-
-    #historyButton.active {
-      background-color: var(--button-hover);
-    }
-  </style>
 </head>
-
 <body>
   <div class="container">
     <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
@@ -110,9 +79,9 @@
       <button type="submit">Відправити</button>
     </form>
 
-    <button id="historyButton" type="button" onclick="toggleHistory()">📊 Переглянути історію</button>
+    <button id="historyButton" type="button" onclick="loadHistory()">📊 Переглянути історію</button>
 
-    <div id="history"></div>
+    <div id="history" style="display:none;"></div>
 
     <p id="status"></p>
   </div>
