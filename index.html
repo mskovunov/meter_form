@@ -6,26 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 
-  <style>
-    /* 👇 Плавное сворачивание/разворачивание истории */
-    #history {
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-      transition: max-height 0.5s ease, opacity 0.5s ease;
-    }
-
-    #history.show {
-      max-height: 1000px; /* достаточно большое значение */
-      opacity: 1;
-    }
-
-    #historyButton.active {
-      background-color: var(--button-hover);
-      color: #fff;
-    }
-  </style>
-
   <script>
     const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec';
 
@@ -43,31 +23,29 @@
       const historyDiv = document.getElementById('history');
       const button = document.getElementById('historyButton');
 
-      // Если уже загружена таблица, просто сворачиваем/разворачиваем
-      if (historyDiv.dataset.loaded === "true") {
-        const isShown = historyDiv.classList.toggle('show');
-        button.classList.toggle('active', isShown);
-        button.innerText = isShown ? '📉 Сховати історію' : '📊 Переглянути історію';
-        return;
-      }
+      const isVisible = historyDiv.classList.contains('visible');
 
-      // Иначе загружаем таблицу
-      button.disabled = true;
-      button.innerText = '⏳ Завантаження...';
+      if (isVisible) {
+        // скрываем
+        historyDiv.classList.remove('visible');
+        button.classList.remove('active');
+        button.innerText = '📊 Переглянути історію';
+      } else {
+        button.disabled = true;
+        button.innerText = '⏳ Завантаження...';
 
-      try {
-        const resp = await fetch(WEBAPP_URL + '?history=1');
-        const html = await resp.text();
-        historyDiv.innerHTML = html;
-        historyDiv.classList.add('show');
-        historyDiv.dataset.loaded = "true";
+        try {
+          const resp = await fetch(WEBAPP_URL + '?history=1');
+          const html = await resp.text();
+          historyDiv.innerHTML = html;
+          historyDiv.classList.add('visible');
+          button.classList.add('active');
+          button.innerText = '📉 Сховати історію';
+        } catch (err) {
+          historyDiv.innerHTML = '<p>⚠️ Помилка при завантаженні історії.</p>';
+          console.error('Помилка історії:', err);
+        }
 
-        button.innerText = '📉 Сховати історію';
-        button.classList.add('active');
-      } catch (err) {
-        historyDiv.innerHTML = '<p>⚠️ Помилка при завантаженні історії.</p>';
-        console.error('Помилка історії:', err);
-      } finally {
         button.disabled = false;
       }
     }
@@ -84,7 +62,27 @@
       }
     });
   </script>
+
+  <style>
+    /* Плавное появление истории */
+    #history {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease-in-out, opacity 0.5s;
+      opacity: 0;
+    }
+
+    #history.visible {
+      max-height: 1000px; /* достаточно для таблицы */
+      opacity: 1;
+    }
+
+    #historyButton.active {
+      background-color: var(--button-hover);
+    }
+  </style>
 </head>
+
 <body>
   <div class="container">
     <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
@@ -114,7 +112,7 @@
 
     <button id="historyButton" type="button" onclick="toggleHistory()">📊 Переглянути історію</button>
 
-    <div id="history" data-loaded="false"></div>
+    <div id="history"></div>
 
     <p id="status"></p>
   </div>
