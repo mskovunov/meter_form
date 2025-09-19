@@ -1,24 +1,111 @@
 function doPost(e) {
-  const sheet = SpreadsheetApp.openById("1HgJDnd3ua_Z7OFU1nSEW1jaHVgiFzx_FBthYTnPMaxo").getSheetByName("Парковка");
+  const sheet = SpreadsheetApp.openById("1HgJDnd3ua_Z7OFU1nSEW1jaHVgiFzx_FBthYTnPMaxo")
+                              .getSheetByName("Парковка");
+
+  const now = new Date();
+  //const formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), "dd.MM.yyyy");
+  const formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), "dd.MM.yyyy HH:mm:ss");
+  const lastRow = sheet.getLastRow();
+  const CurRow = lastRow + 1;
+  const reading = e.parameter.reading.replace('.', ',');
+  const valastRow = sheet.getRange('D' + lastRow).getValue();
+  let valToUse = valastRow;
+
+  if (!valastRow && lastRow > 1) {
+    valToUse = sheet.getRange('D' + (lastRow - 1)).getValue();
+  }
+
   sheet.appendRow([
-    new Date(),
-    e.parameter.name || '',
-    e.parameter.reading || ''
+    formattedDate,
+    e.parameter.name || '', 
+    valToUse,
+    reading || '',
+    '=D' + CurRow + '-C' + CurRow,
+    '9',
+    '=E' + CurRow + '*F' + CurRow
   ]);
 
   return HtmlService.createHtmlOutput(`
     <html>
       <head>
-        <meta charset="UTF-8">
-        <title>Спасибо</title>
+        <meta http-equiv="refresh" content="0; url=https://mskovunov.github.io/meter_form/success.html">
       </head>
       <body>
-        <h2>Спасибо! Данные успешно отправлены.</h2>
-        <p>Вы можете закрыть это окно.</p>
-        <script>
-          setTimeout(() => window.close(), 3000);
-        </script>
+        <p>Переадресация...</p>
       </body>
     </html>
   `);
+}
+
+function getLastValToUse() {
+  const sheet = SpreadsheetApp.openById("1HgJDnd3ua_Z7OFU1nSEW1jaHVgiFzx_FBthYTnPMaxo")
+                              .getSheetByName("Парковка");
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return '';
+
+  let valastRow = sheet.getRange('D' + lastRow).getValue();
+  if (!valastRow && lastRow > 1) {
+    valastRow = sheet.getRange('D' + (lastRow - 1)).getValue();
+  }
+  return valastRow || '';
+}
+
+function doGet(e) {
+  const sheet = SpreadsheetApp.openById("1HgJDnd3ua_Z7OFU1nSEW1jaHVgiFzx_FBthYTnPMaxo")
+                              .getSheetByName("Парковка");
+
+  // Получение последнего значения (для поля "було")
+  if (e.parameter.getLast) {
+    return ContentService.createTextOutput(getLastValToUse());
+  }
+
+  // История — HTML-таблица
+  if (e.parameter.history) {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+
+    // Читаем данные A2:E
+    const data = sheet.getRange("A2:E" + sheet.getLastRow()).getValues();
+
+    // Обработка строк
+    const filtered = data
+      .map(row => {
+        const rawDate = row[0];
+        const parsedDate = new Date(rawDate);
+        return {
+          dateObj: parsedDate,
+          formattedDate: Utilities.formatDate(parsedDate, Session.getScriptTimeZone(), "dd.MM.yyyy"),
+          user: row[1],
+          from: row[2],
+          to: row[3],
+          diff: row[4]
+        };
+      })
+      .filter(row =>
+        row.dateObj.getMonth() === thisMonth &&
+        row.dateObj.getFullYear() === thisYear
+      )
+      .sort((a, b) => a.dateObj - b.dateObj); // сортировка по дате
+
+    // Формируем HTML-таблицу
+    let html = '<div id="history"><h3>Останні показники</h3><table><thead><tr><th>Дата</th><th>Користувач</th><th>Було</th><th>Стало</th><th>Різниця</th></tr></thead><tbody>';
+
+    filtered.forEach(row => {
+      html += `<tr>
+        <td>${row.formattedDate}</td>
+        <td>${row.user}</td>
+        <td>${row.from}</td>
+        <td>${row.to}</td>
+        <td>${(typeof row.diff === 'number') ? row.diff.toFixed(1) : row.diff}</td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+
+    return ContentService.createTextOutput(html).setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  // По умолчанию
+  return HtmlService.createHtmlOutput('Web App працює');
 }
