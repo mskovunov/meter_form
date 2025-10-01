@@ -38,6 +38,7 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 10px;
+  overflow-x: hidden;
 }
 
 .container {
@@ -48,6 +49,8 @@ body {
   width: 100%;
   max-width: 400px;
   text-align: center;
+  min-height: 80vh; /* ГАРАНТИРУЕТ, что высота контейнера не меньше высоты окна */
+  padding-bottom: 20px; /* Дополнительный отступ снизу */
 }
 
 h2 {
@@ -141,13 +144,14 @@ button:hover {
 .theme-toggle {
   background: none;
   border: 1px solid var(--input-border);
-  padding: 6px 10px;
+  padding: 10px 15px;
   margin-bottom: 20px;
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: pointer;
   color: var(--text-color);
   transition: background-color 0.3s;
+  margin-left: 5px;
 }
 
 .theme-toggle:hover {
@@ -217,4 +221,260 @@ button:hover {
   #history table {
     font-size: 0.85rem;
   }
+  
+}
+
+.port-status-block {
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 15px 16px;
+  background-color: var(--input-bg);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.port-status-block h3 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.port-status-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.port-indicator {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #2e7d32; /* default green */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.port-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: brightness(1);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--button-bg);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+#portStatusText {
+  min-width: 80px;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.port-toggle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.port-status-label {
+  font-size: 0.95rem;
+  color: var(--text-color);
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px; /* было 15px */
+  text-align: left;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.menu-button {
+  
+  top: 12px;           /* отступ сверху */
+  left: 12px;          /* или right: 12px; если нужно справа */
+  width: 36px;         /* фиксированный размер */
+  height: 36px;
+  font-size: 1.4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-color);
+  z-index: 20;
+  transition: transform 0.2s;
+}
+
+.menu-button:hover {
+  transform: scale(1.2);
+}
+
+/* Сайд-меню */
+.side-menu {
+  position: absolute;
+  top: 20px;
+  left: -20px;
+  width: 200px;
+  height: 100%;
+  background-color: var(--input-bg);
+  border-right: 1px solid var(--input-border);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.08);
+  padding: 20px 15px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
+}
+
+.side-menu.open {
+  transform: translateX(0);
+}
+
+.side-menu .close-button {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.side-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.side-menu li {
+  margin-bottom: 10px;
+}
+
+.side-menu a {
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  /* ИСПРАВЛЕНИЕ: Используем Flexbox для выравнивания */
+  display: flex;
+  align-items: center; /* Выравнивает иконку и текст по центру */
+  gap: 10px; /* Добавляет пространство между иконкой и текстом */
+  /* Добавляем общие отступы по краям */
+  padding: 10px 20px; 
+
+}
+
+.side-menu a:hover {
+  text-decoration: underline;
+}
+
+.form-wrapper {
+  position: relative;
+  overflow: hidden; /* важно, чтобы меню не вылезало за пределы формы */
+  min-height: 80vh;
+}
+
+/* Правила для меню внутри form-wrapper */
+.form-wrapper .side-menu {
+  position: absolute; /* Позиционируем относительно .form-wrapper */
+  top: 20;
+  left: -20px;
+  width: 200px; /* Важно, чтобы ширина была фиксированной */
+  height: 100%;
+  background-color: var(--input-bg);
+  border-right: 1px solid var(--input-border);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.08);
+  padding: 20px 15px;
+  transform: translateX(-100%); 
+  transition: transform 0.3s ease;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  
+}
+
+.form-wrapper .side-menu.open {
+  transform: translateX(0); /* Показывает меню */
+}
+
+/* Новый стиль для контейнера с прокруткой */
+.chart-container-scroll {
+    /* Если контейнер становится шире его родителя (например, на мобильном),
+       появляется горизонтальная полоса прокрутки */
+    overflow-x: auto; 
+    /* Добавляем небольшой отступ, чтобы полоса прокрутки выглядела лучше */
+    padding-bottom: 10px; 
+}
+
+/* Убедитесь, что сам iframe не растягивается сверх 100% родителя,
+   чтобы контейнер управлял прокруткой. */
+.chart-container-scroll iframe {
+    /* Максимальная ширина iframe ограничена контейнером */
+    max-width: none; 
+}
+
+/* Дополнительный стиль для версии сборки */
+#buildVersion {
+    /* Явно устанавливаем как блочный элемент */
+    display: block;
+    
+    /* Очищает пространство от любых предыдущих плавающих (float) элементов, 
+       гарантируя, что текст будет расположен под ними. */
+    clear: both; 
+    
+    margin-top: 20px;
+    font-size: 0.75rem;
+    color: #999;
+    text-align: center; 
 }
