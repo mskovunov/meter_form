@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
 
   <script>
-    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyvl_C5rbp6v9Xk_zHv-cbxNNhvbgXCzghiq7gxXol-AynQDOZWYdNuf9-ECriA7J0G/exec';
+    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';
 	const BUILD_VERSION = 'v2025.10.01'; // <-- ДОБАВЛЕНО
 
     async function loadPreviousReading() {
@@ -40,14 +40,34 @@
       }
     }
 	
+	/* --- ИСПРАВЛЕНИЕ: УДАЛЕН ИЗНАЧАЛЬНЫЙ window.addEventListener ---
 	window.addEventListener('DOMContentLoaded', () => {
-    setupPortStatusToggle();
-    loadPreviousReading();
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark');
-    }
-    document.getElementById('buildVersion').textContent = BUILD_VERSION; // <-- ДОБАВЛЕНО
-});
+        setupPortStatusToggle();
+        loadPreviousReading();
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark');
+        }
+        document.getElementById('buildVersion').textContent = BUILD_VERSION;
+    });
+*/
+    
+    /* --- ИСПРАВЛЕНИЕ: ДОБАВЛЕНА ФУНКЦИЯ ЗАГРУЗКИ СТАТУСА ИЗ GAS --- */
+    async function loadPortStatusFromSheet() {
+        try {
+            const resp = await fetch(WEBAPP_URL + '?getPortStatus=1');
+            const status = await resp.text().trim(); // 'busy' или 'available'
+            
+            // Сохраняем в localStorage и обновляем UI
+            localStorage.setItem("portStatus", status); 
+            updatePortToggleUI(status);
+        } catch (err) {
+            console.error('Помилка при отриманні статусу порта:', err);
+            // Fallback: в случае ошибки используем старый статус из localStorage, если есть
+            const saved = localStorage.getItem("portStatus") || "available";
+            updatePortToggleUI(saved);
+        }
+    }
+    /* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
 
     function toggleTheme() {
       const isDark = document.body.classList.toggle('dark');
@@ -72,6 +92,24 @@ function updatePortToggleUI(status) {
       localStorage.setItem("portStatus", status);
       updatePortToggleUI(status);
 
+// --- ДОБАВЛЕН ВЫЗОВ УВЕДОМЛЕНИЯ ANDROID ---
+      let notificationTitle;
+      let notificationMessage;
+      
+      if (status === "busy") {
+          notificationTitle = "Статус порта: ЗАЙНЯТИЙ";
+          notificationMessage = "Порт зарядки позначено як зайнятий.";
+      } else {
+          notificationTitle = "Статус порта: ДОСТУПНИЙ";
+          notificationMessage = "Порт зарядки знову доступний для використання!";
+      }
+
+      if (typeof AndroidNotifier !== 'undefined') {
+          // Вызываем нативный метод, который покажет системное уведомление
+          AndroidNotifier.showNotification(notificationTitle, notificationMessage);
+      }
+      // ------------------------------------------
+
       fetch(WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -82,18 +120,27 @@ function updatePortToggleUI(status) {
       .catch(console.error);
     }
 
+/* --- ИСПРАВЛЕНИЕ: УДАЛЕНА setupPortStatusToggle() ---
 function setupPortStatusToggle() {
-  const saved = localStorage.getItem("portStatus") || "available";
-  updatePortToggleUI(saved);
+  const saved = localStorage.getItem("portStatus") || "available";
+  updatePortToggleUI(saved);
 }
+*/
 
-    window.addEventListener('DOMContentLoaded', () => {
-	  setupPortStatusToggle();
-      loadPreviousReading();
-      if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark');
-      }
-    });
+/* --- ИСПРАВЛЕНИЕ: ОБНОВЛЕННЫЙ DOMContentLoaded --- */
+    window.addEventListener('DOMContentLoaded', () => {
+  /* --- ДОБАВЛЕНО: Синхронно читаем статус из localStorage для предотвращения мерцания до загрузки с сервера --- */
+      const initialStatus = localStorage.getItem("portStatus") || "available";
+      updatePortToggleUI(initialStatus); 
+      /* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
+	  loadPortStatusFromSheet(); // Читаем актуальный статус из GAS
+      loadPreviousReading();
+      if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+      }
+      document.getElementById('buildVersion').textContent = BUILD_VERSION; // Отображаем версию сборки
+    });
+/* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
 	function toggleMenu() {
   const menu = document.getElementById("sideMenu");
   menu.classList.toggle("open");
@@ -184,46 +231,65 @@ function setupPortStatusToggle() {
     const form = document.getElementById("meterForm");
     const status = document.getElementById("status");
 
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
+/* --- ИСПРАВЛЕНИЕ: ПЕРЕПИСЫВАНИЕ ОБРАБОТЧИКА form.addEventListener --- */
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-      const win = window.open('', '', 'width=500,height=300');
-      if (win) {
-        win.document.write('<p style="font-family:sans-serif">⏳ Відправка даних...</p>');
-      }
+      // 1. Показываем статус "Отправка..."
+      status.innerText = '⏳ Відправка даних...';
+      status.classList.remove('success', 'error', 'show');
+      status.classList.add('show'); // Класс 'show' делает его видимым
 
-      const data = new URLSearchParams();
-      data.append("name", form.name.value);
-      data.append("reading", form.reading.value);
+      const data = new URLSearchParams();
+      data.append("name", form.name.value);
+      data.append("reading", form.reading.value);
 
-      let success = false;
+      let success = false;
 
-      try {
-        await fetch(WEBAPP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: data.toString(),
-        });
-        success = true;
-      } catch (err) {
-        console.error("Помилка при відправці:", err);
-      } finally {
-        status.innerText = success ? "✅ Дані успішно відправлені!" : "⚠️ Дані відправлені з попередженням!";
-        status.classList.remove("success", "error");
-        status.classList.add(success ? "success" : "error");
-        form.reset();
-        status.classList.add("show");
-        setTimeout(() => status.classList.remove("show"), 3000);
-
-        if (win) {
-          win.document.body.innerHTML = `
-            <h2>${success ? "✅ Дані успішно відправлені!" : "⚠️ Дані відправлені з попередженням!"}</h2>
-            <p>Це вікно закриється через 3 секунди...</p>
-          `;
-          setTimeout(() => win.close(), 3000);
+      try {
+        const response = await fetch(WEBAPP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: data.toString(),
+        });
+        
+        // ВАЖНОЕ ИЗМЕНЕНИЕ: Читаем ответ как текст, чтобы избежать сбоев при обработке редиректа в GAS.
+        const responseText = await response.text(); 
+        
+        // Проверяем статус ответа
+        if (response.ok) {
+            success = true;
+        } else {
+            console.error("GAS вернул ошибку:", responseText);
+            success = false;
         }
-      }
-    });
+
+      } catch (err) {
+        console.error("Помилка при відправці:", err);
+        success = false;
+      } finally {
+        
+        // 2. Обновляем статус
+        if (success) {
+            status.innerText = "✅ Дані успішно відправлені!";
+            status.classList.add("success");
+            // Сброс формы и обновление предыдущего показателя только при успехе
+            form.reset();
+            loadPreviousReading(); 
+        } else {
+            status.innerText = "⚠️ Помилка при відправці даних!";
+            status.classList.add("error");
+        }
+        
+        // 3. Скрываем статус через 3 секунды
+        setTimeout(() => {
+            status.classList.remove("show", "success", "error");
+        }, 3000);
+
+        // 4. УДАЛЕНА вся логика с win.open и win.close
+      }
+    });
+/* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
   </script>
 </body>
 </html>
