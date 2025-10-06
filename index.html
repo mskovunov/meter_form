@@ -8,7 +8,7 @@
 
   <script>
     const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';
-	const BUILD_VERSION = 'v2025.10.06'; // <-- ДОБАВЛЕНО
+	const BUILD_VERSION = 'v2025.10.07'; // <-- ДОБАВЛЕНО
 
     async function loadPreviousReading() {
       try {
@@ -40,34 +40,21 @@
       }
     }
 	
-	/* --- ИСПРАВЛЕНИЕ: УДАЛЕН ИЗНАЧАЛЬНЫЙ window.addEventListener ---
-	window.addEventListener('DOMContentLoaded', () => {
-        setupPortStatusToggle();
-        loadPreviousReading();
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark');
-        }
-        document.getElementById('buildVersion').textContent = BUILD_VERSION;
-    });
-*/
-    
-    /* --- ИСПРАВЛЕНИЕ: ДОБАВЛЕНА ФУНКЦИЯ ЗАГРУЗКИ СТАТУСА ИЗ GAS --- */
+
+/* --- ДОБАВЛЕНО: loadPortStatusFromSheet (для устранения ошибки на странице) --- */
     async function loadPortStatusFromSheet() {
         try {
             const resp = await fetch(WEBAPP_URL + '?getPortStatus=1');
-            const status = await resp.text().trim(); // 'busy' или 'available'
-            
-            // Сохраняем в localStorage и обновляем UI
+            const status = (await resp.text()).trim(); 
             localStorage.setItem("portStatus", status); 
             updatePortToggleUI(status);
         } catch (err) {
             console.error('Помилка при отриманні статусу порта:', err);
-            // Fallback: в случае ошибки используем старый статус из localStorage, если есть
             const saved = localStorage.getItem("portStatus") || "available";
             updatePortToggleUI(saved);
         }
     }
-    /* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
+    /* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
 
     function toggleTheme() {
       const isDark = document.body.classList.toggle('dark');
@@ -120,25 +107,31 @@ function updatePortToggleUI(status) {
       .catch(console.error);
     }
 
-/* --- ИСПРАВЛЕНИЕ: УДАЛЕНА setupPortStatusToggle() ---
+
+/* --- ИСПРАВЛЕНИЕ: setupPortStatusToggle() заменена на loadPortStatusFromSheet() --- */
+/*
 function setupPortStatusToggle() {
   const saved = localStorage.getItem("portStatus") || "available";
   updatePortToggleUI(saved);
 }
 */
 
-/* --- ИСПРАВЛЕНИЕ: ОБНОВЛЕННЫЙ DOMContentLoaded --- */
     window.addEventListener('DOMContentLoaded', () => {
-  /* --- ДОБАВЛЕНО: Синхронно читаем статус из localStorage для предотвращения мерцания до загрузки с сервера --- */
-      const initialStatus = localStorage.getItem("portStatus") || "available";
-      updatePortToggleUI(initialStatus); 
-      /* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
-	  loadPortStatusFromSheet(); // Читаем актуальный статус из GAS
+	  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+	  // --- ИСПРАВЛЕНИЕ МЕРЦАНИЯ ---
+	  // 1. СИНХРОННО: Читаем последний сохраненный статус для немедленного отображения (устраняет мерцание)
+      const initialStatus = localStorage.getItem("portStatus") || "available";
+      updatePortToggleUI(initialStatus); 
+      
+	  // 2. АСИНХРОННО: Запрашиваем актуальный статус из GAS (он обновит UI через 1-2 сек)
+	  loadPortStatusFromSheet(); 
+	  // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	  
       loadPreviousReading();
       if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark');
       }
-      document.getElementById('buildVersion').textContent = BUILD_VERSION; // Отображаем версию сборки
+      document.getElementById('buildVersion').textContent = BUILD_VERSION; // <-- ДОБАВЛЕНО
     });
 /* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
 	function toggleMenu() {
@@ -231,7 +224,7 @@ function setupPortStatusToggle() {
     const form = document.getElementById("meterForm");
     const status = document.getElementById("status");
 
-/* --- ИСПРАВЛЕНИЕ: ПЕРЕПИСЫВАНИЕ ОБРАБОТЧИКА form.addEventListener --- */
+   /* --- ИСПРАВЛЕНИЕ: ПЕРЕПИСЫВАНИЕ ОБРАБОТЧИКА form.addEventListener (УДАЛЕН win.open) --- */
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
@@ -292,5 +285,4 @@ function setupPortStatusToggle() {
 /* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
   </script>
 </body>
-
 </html>
