@@ -5,10 +5,101 @@
   <title>Передача показників</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+  	  <!-- Кнопка меню -->
+	<button class="menu-button" onclick="toggleMenu()">
+	  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M4 6H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	  </svg>
+	</button>
+  <div class="form-wrapper">
+
+
+	<!-- Боковое меню -->
+	<div class="side-menu" id="sideMenu">
+	  <button class="close-button" onclick="toggleMenu()">❌</button>
+	  <ul>
+		<li><a href="index.html">🏠 Головна</a></li> 
+		<li><a href="history.html">📜 Історія</a></li> 
+		<li><a href="stats.html">📈 Статистика</a></li>
+		<li><a href="settings.html">⚙️ Налаштування</a></li>
+		<li><a href="#" onclick="closeWebView()">🚪 Вихід</a></li> 
+	  </ul>
+	  <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
+	</div>
+    
+
+    <h2>Форма для передачі показників лічильника</h2>
+
+<label>🔌 Статус порта зарядки: </label>
+<!-- ИЗМЕНЕНИЕ 1: Блок порта теперь является контейнером для загрузчика -->
+<div class="port-status-block"> 
+  
+  <!-- ДОБАВЛЕНИЕ 1: Элемент загрузки (отображается по умолчанию) -->
+  <div class="status-loader-wrapper" id="portLoader">
+      <div class="status-loader"></div>
+  </div>
+  <!-- КОНЕЦ ДОБАВЛЕНИЯ -->
+  
+  <div class="port-status-content">
+    <div class="port-indicator" id="portIndicator">
+      <img src="img/Type_2_transp.png" alt="Type-2 порт" class="port-icon">
+    </div>
+    
+  <div class="port-toggle-wrapper">
+    <label class="switch">
+      <input type="checkbox" id="portToggle" onchange="togglePortStatus()">
+      <span class="slider"></span>
+    </label>
+    <div id="portStatusText" class="port-status-label">Доступний</div>
+  </div>
+  </div>
+</div>
+	
+    <form id="meterForm">
+	
+      <label>Попередній показник:
+        <input type="number" id="prevReading" readonly placeholder="Завантаження...">
+      </label>
+
+      <label>Новий показник:
+        <input type="number" name="reading" required step="0.1" min="0" placeholder="Наприклад: 405.5">
+      </label>
+
+      <label>Користувач:
+        <select name="name" required>
+          <option value="" disabled selected>Оберіть користувача</option>
+          <option value="eGolf">eGolf</option>
+          <option value="iONIQ">iONIQ</option>
+          <option value="інше">інше</option>
+        </select>
+      </label>
+
+      <button type="submit">Відправити</button>
+    </form>
+
+    <button id="historyButton" type="button" onclick="loadHistory()">📊 Поточний місяць</button>
+
+    <div id="history" style="display:none;"></div>
+
+ <p id="status"></p>
+    
+    <p id="buildVersion" style="margin-top: 20px; font-size: 0.75rem; color: #999; text-align: center;"></p>
+</div>
+  </div>
+  </div>
 
   <script>
-    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby7-ToHy_YNuQ8UxISniVLB9ArQW9cN9pnvMZbAwLlnL4SsGfTKG4JcXYvi_eKhl6ZD/exec';
+  
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';		
+  const BUILD_VERSION = 'v2025.10.13.1359'; 
 
+	
     async function loadPreviousReading() {
       try {
         const resp = await fetch(WEBAPP_URL + '?getLast=1');
@@ -38,98 +129,172 @@
         button.innerText = 'Переглянути історію';
       }
     }
+	
+/* --- ДОБАВЛЕНО: loadPortStatusFromSheet (с управлением загрузчиком) --- */
+    async function loadPortStatusFromSheet() {
+        const loader = document.getElementById('portLoader');
+        
+        try {
+            const resp = await fetch(WEBAPP_URL + '?getPortStatus=1');
+            const status = (await resp.text()).trim(); 
+            localStorage.setItem("portStatus", status); 
+            updatePortToggleUI(status);
+        } catch (err) {
+            console.error('Помилка при отриманні статусу порта:', err);
+            // Если GAS недоступен, используем значение из localStorage (по умолчанию 'available')
+            const saved = localStorage.getItem("portStatus") || "available";
+            updatePortToggleUI(saved);
+        } finally {
+            // ИЗМЕНЕНИЕ 2: Скрываем загрузчик после завершения операции
+            loader.classList.add('hidden');
+        }
+    }
+    /* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
 
     function toggleTheme() {
       const isDark = document.body.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
+	
+function updatePortToggleUI(status) {
+  const toggle = document.getElementById("portToggle");
+  const text = document.getElementById("portStatusText");
+  const indicator = document.getElementById("portIndicator");
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadPreviousReading();
-      if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark');
+  toggle.checked = status === "busy"; // ВКЛ означает busy
+  text.textContent = status === "busy" ? "Зайнятий" : "Доступний";
+  indicator.style.backgroundColor = status === "busy" ? "#c62828" : "#2e7d32";
+}
+
+    function togglePortStatus() {
+      const isBusy = document.getElementById("portToggle").checked;
+      const status = isBusy ? "busy" : "available";
+      const statusValue = isBusy ? "1" : "0";
+
+      localStorage.setItem("portStatus", status);
+      updatePortToggleUI(status);
+
+// --- ДОБАВЛЕН ВЫЗОВ УВЕДОМЛЕНИЯ ANDROID ---
+      let notificationTitle;
+      let notificationMessage;
+      
+      if (status === "busy") {
+          notificationTitle = "Статус порта: ЗАЙНЯТИЙ";
+          notificationMessage = "Порт зарядки позначено як зайнятий.";
+      } else {
+          notificationTitle = "Статус порта: ДОСТУПНИЙ";
+          notificationMessage = "Порт зарядки знову доступний для використання!";
       }
-    });
-  </script>
-</head>
-<body>
-  <div class="container">
-    <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
 
-    <h2>Форма для передачі показників лічильника</h2>
+      if (typeof AndroidNotifier !== 'undefined') {
+          // Вызываем нативный метод, который покажет системное уведомление
+          AndroidNotifier.showNotification(notificationTitle, notificationMessage);
+      }
+      // ------------------------------------------
 
-    <form id="meterForm">
-      <label>Попередній показник:
-        <input type="number" id="prevReading" readonly placeholder="Завантаження...">
-      </label>
+      fetch(WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ portStatus: statusValue })
+      })
+      .then(res => res.text())
+      .then(console.log)
+      .catch(console.error);
+    }
 
-      <label>Новий показник:
-        <input type="number" name="reading" required step="0.1" placeholder="Наприклад: 405.5">
-      </label>
+	
+/* --- ИСПРАВЛЕННЫЙ И ОБЪЕДИНЕННЫЙ DOMContentLoaded --- */
+    window.addEventListener('DOMContentLoaded', () => {
+	  
+	  // АСИНХРОННО: Запрашиваем актуальный статус из GAS 
+	  loadPortStatusFromSheet(); 
+	  
+      loadPreviousReading();
+      if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+      }
+      document.getElementById('buildVersion').textContent = BUILD_VERSION; 
+    });
 
-      <label>Користувач:
-        <select name="name" required>
-          <option value="" disabled selected>Оберіть користувача</option>
-          <option value="eGolf">eGolf</option>
-          <option value="iONIQ">iONIQ</option>
-          <option value="інше">інше</option>
-        </select>
-      </label>
+		function toggleMenu() {
+	  const menu = document.getElementById("sideMenu");
+	  menu.classList.toggle("open");
+	}
 
-      <button type="submit">Відправити</button>
-    </form>
-
-    <button id="historyButton" type="button" onclick="loadHistory()">📊 Переглянути історію</button>
-
-    <div id="history" style="display:none;"></div>
-
-    <p id="status"></p>
-  </div>
-
-  <script>
+	
     const form = document.getElementById("meterForm");
     const status = document.getElementById("status");
 
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
+   /* --- ИСПРАВЛЕНИЕ: ПЕРЕПИСЫВАНИЕ ОБРАБОТЧИКА form.addEventListener (УДАЛЕН win.open) --- */
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-      const win = window.open('', '', 'width=500,height=300');
-      if (win) {
-        win.document.write('<p style="font-family:sans-serif">⏳ Відправка даних...</p>');
-      }
+      // 1. Показываем статус "Отправка..."
+      status.innerText = '⏳ Відправка даних...';
+      status.classList.remove('success', 'error', 'show');
+      status.classList.add('show'); // Класс 'show' делает его видимым
 
-      const data = new URLSearchParams();
-      data.append("name", form.name.value);
-      data.append("reading", form.reading.value);
+      const data = new URLSearchParams();
+      data.append("name", form.name.value);
+      data.append("reading", form.reading.value);
 
-      let success = false;
+      let success = false;
 
-      try {
-        await fetch(WEBAPP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: data.toString(),
-        });
-        success = true;
-      } catch (err) {
-        console.error("Помилка при відправці:", err);
-      } finally {
-        status.innerText = success ? "✅ Дані успішно відправлені!" : "⚠️ Дані відправлені з попередженням!";
-        status.classList.remove("success", "error");
-        status.classList.add(success ? "success" : "error");
-        form.reset();
-        status.classList.add("show");
-        setTimeout(() => status.classList.remove("show"), 3000);
-
-        if (win) {
-          win.document.body.innerHTML = `
-            <h2>${success ? "✅ Дані успішно відправлені!" : "⚠️ Дані відправлені з попередженням!"}</h2>
-            <p>Це вікно закриється через 3 секунди...</p>
-          `;
-          setTimeout(() => win.close(), 3000);
+      try {
+        const response = await fetch(WEBAPP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: data.toString(),
+        });
+        
+        // ВАЖНОЕ ИЗМЕНЕНИЕ: Читаем ответ как текст, чтобы избежать сбоев при обработке редиректа в GAS.
+        const responseText = await response.text(); 
+        
+        // Проверяем статус ответа
+        if (response.ok) {
+            success = true;
+        } else {
+            console.error("GAS вернул ошибку:", responseText);
+            success = false;
         }
-      }
-    });
+
+      } catch (err) {
+        console.error("Помилка при відправці:", err);
+        success = false;
+      } finally {
+        
+        // 2. Обновляем статус
+        if (success) {
+            status.innerText = "✅ Дані успішно відправлені!";
+            status.classList.add("success");
+            // Сброс формы и обновление предыдущего показателя только при успехе
+            form.reset();
+            loadPreviousReading(); 
+        } else {
+            status.innerText = "⚠️ Помилка при відправці даних!";
+            status.classList.add("error");
+        }
+        
+        // 3. Скрываем статус через 3 секунды
+        setTimeout(() => {
+            status.classList.remove("show", "success", "error");
+        }, 3000);
+
+        // 4. УДАЛЕНА вся логика с win.open и win.close
+      }
+    });
+
+		/* --- ДОБАВЛЕНО: ФУНКЦИЯ ЗАКРЫТИЯ WEBVIEW --- */
+		function closeWebView() {
+			console.log("Attempting to close WebView...");
+			// Проверка наличия нативного Android-интерфейса
+			if (typeof Android !== 'undefined' && Android.closeApp) {
+				Android.closeApp();
+			} else {
+				// Fallback для обычного браузера
+				console.warn("Native Android closeApp interface not found. Cannot close application.");
+			}
+		}
   </script>
 </body>
 </html>
