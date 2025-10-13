@@ -38,6 +38,7 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 10px;
+  overflow-x: hidden;
 }
 
 .container {
@@ -48,6 +49,8 @@ body {
   width: 100%;
   max-width: 400px;
   text-align: center;
+  min-height: 80vh; /* ГАРАНТИРУЕТ, что высота контейнера не меньше высоты окна */
+  padding-bottom: 20px; /* Дополнительный отступ снизу */
 }
 
 h2 {
@@ -141,13 +144,14 @@ button:hover {
 .theme-toggle {
   background: none;
   border: 1px solid var(--input-border);
-  padding: 6px 10px;
+  padding: 10px 15px;
   margin-bottom: 20px;
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: pointer;
   color: var(--text-color);
   transition: background-color 0.3s;
+  margin-left: 5px;
 }
 
 .theme-toggle:hover {
@@ -217,4 +221,468 @@ button:hover {
   #history table {
     font-size: 0.85rem;
   }
+  
 }
+
+.port-status-block {
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 15px 16px;
+  background-color: var(--input-bg);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.port-status-block h3 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.port-status-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.port-indicator {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #2e7d32; /* default green */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.port-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: brightness(1);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--button-bg);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+#portStatusText {
+  min-width: 80px;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.port-toggle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.port-status-label {
+  font-size: 0.95rem;
+  color: var(--text-color);
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px; /* было 15px */
+  text-align: left;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.menu-button {
+  
+  top: 12px;           /* отступ сверху */
+  left: 12px;          /* или right: 12px; если нужно справа */
+  width: 36px;         /* фиксированный размер */
+  height: 36px;
+  font-size: 1.4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-color);
+  z-index: 20;
+  transition: transform 0.2s;
+}
+
+.menu-button:hover {
+  transform: scale(1.2);
+}
+
+/* Сайд-меню */
+.side-menu {
+  position: absolute;
+  top: 20px;
+  left: -20px;
+  width: 200px;
+  height: 100%;
+  background-color: var(--input-bg);
+  border-right: 1px solid var(--input-border);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.08);
+  padding: 20px 15px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
+}
+
+.side-menu.open {
+  transform: translateX(0);
+}
+
+.side-menu .close-button {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.side-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.side-menu li {
+  margin-bottom: 10px;
+}
+
+.side-menu a {
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  /* ИСПРАВЛЕНИЕ: Используем Flexbox для выравнивания */
+  display: flex;
+  align-items: center; /* Выравнивает иконку и текст по центру */
+  gap: 10px; /* Добавляет пространство между иконкой и текстом */
+  /* Добавляем общие отступы по краям */
+  padding: 10px 20px; 
+
+}
+
+.side-menu a:hover {
+  text-decoration: underline;
+}
+
+.form-wrapper {
+  position: relative;
+  overflow: hidden; /* важно, чтобы меню не вылезало за пределы формы */
+  min-height: 80vh;
+}
+
+/* Правила для меню внутри form-wrapper */
+.form-wrapper .side-menu {
+  position: absolute; /* Позиционируем относительно .form-wrapper */
+  top: 20;
+  left: -20px;
+  width: 200px; /* Важно, чтобы ширина была фиксированной */
+  height: 100%;
+  background-color: var(--input-bg);
+  border-right: 1px solid var(--input-border);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.08);
+  padding: 20px 15px;
+  transform: translateX(-100%); 
+  transition: transform 0.3s ease;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  
+}
+
+.form-wrapper .side-menu.open {
+  transform: translateX(0); /* Показывает меню */
+}
+
+/* Новый стиль для контейнера с прокруткой */
+.chart-container-scroll {
+    /* Если контейнер становится шире его родителя (например, на мобильном),
+       появляется горизонтальная полоса прокрутки */
+    overflow-x: auto; 
+    /* Добавляем небольшой отступ, чтобы полоса прокрутки выглядела лучше */
+    padding-bottom: 10px; 
+}
+
+/* Убедитесь, что сам iframe не растягивается сверх 100% родителя,
+   чтобы контейнер управлял прокруткой. */
+.chart-container-scroll iframe {
+    /* Максимальная ширина iframe ограничена контейнером */
+    max-width: none; 
+}
+
+ /* ---------------------------------------------------- */
+    /* --- CSS ДЛЯ АНИМАЦИИ ЗАГРУЗКИ (Loader CSS) --- */
+    /* ---------------------------------------------------- */
+    .port-status-block {
+      position: relative;
+    }
+    
+    .status-loader-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80px; /* Занимает высоту блока порта */
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: var(--input-bg, #fff); /* Фон, чтобы скрыть содержимое */
+        z-index: 10;
+        border-radius: 12px;
+    }
+
+    /* Анимация крутящегося колеса (Spinner) */
+    .status-loader {
+      border: 4px solid var(--input-border, #f3f3f3);
+      border-top: 4px solid var(--button-hover, #4a90e2); 
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Скрывает загрузчик после загрузки данных */
+    .status-loader-wrapper.hidden {
+        display: none;
+    }
+	
+ /* ---------------------------------------- */	
+ /* ---------СТИЛИ ДЛЯ SETTINGS.HTML-------- */	
+ /* ---------------------------------------- */	
+ 
+        /* --- СТИЛИ ДЛЯ ТАБЛИЦЫ КОНФИГУРАЦИИ --- */
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .config-table th, .config-table td {
+            padding: 10px 8px;
+            border: 1px solid var(--table-border);
+            text-align: left;
+        }
+        /* ВЫРАВНИВАНИЕ: Принудительное выравнивание заголовков по центру, кроме первой колонки */
+        .config-table thead th {
+            background-color: var(--table-th-bg);
+            color: var(--text-color);
+            text-align: left; /* Сброс глобального центрирования для всех th */
+        }
+        .config-table thead th:not(:first-child) {
+            text-align: center; /* Центрируем, кроме первой */
+        }
+        
+        /* Стилизация строк и hover */
+        .config-table tbody tr:nth-child(even) {
+            background-color: var(--table-row-alt);
+        }
+        .config-table tbody tr:hover {
+            background-color: var(--table-hover);
+        }
+        
+        /* Стилизуем первую колонку для выравнивания */
+        .config-table td:first-child {
+            padding-left: 15px; /* Небольшой отступ слева для имени */
+        }
+
+        /* Выравнивание индикаторов статуса по центру */
+        .config-table .status-col {
+            text-align: center;
+            width: 25%;
+        }
+        
+        /* --- СТИЛИ ДЛЯ ИНДИКАТОРОВ СТАТУСА --- */
+        .status-indicator {
+            font-weight: bold;
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer; 
+            transition: background-color 0.2s;
+        }
+        .status-indicator:hover {
+            filter: brightness(1.1);
+        }
+        .status-loading {
+            pointer-events: none; 
+            opacity: 0.6;
+        }
+        .status-active {
+            background-color: rgba(46, 125, 50, 0.2); 
+            color: var(--status-success);
+        }
+        .status-inactive {
+            background-color: rgba(198, 40, 40, 0.2); 
+            color: var(--status-error);
+        }
+        .row-active {
+            border-left: 4px solid var(--status-success);
+        }
+        
+        /* --- СТИЛИ ДЛЯ АККОРДЕОНА --- */
+        .accordion-item {
+            margin-top: 20px;
+            border: 1px solid var(--table-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .accordion-header {
+            background-color: var(--table-th-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+            text-align: left; /* Важно для переноса текста */
+        }
+        /* ГАРАНТИРУЕТ КОРРЕКТНОЕ ВЫРАВНИВАНИЕ ПРИ ПЕРЕНОСЕ */
+        .accordion-header .accordion-title {
+            flex-grow: 1;
+            text-align: left; /* Главное исправление: гарантируем левое выравнивание для переноса */
+        }
+
+        .accordion-header:hover {
+            background-color: var(--table-hover);
+        }
+        .accordion-icon {
+            font-size: 1rem;
+            margin-left: 10px;
+            transition: transform 0.3s;
+            flex-shrink: 0; 
+        }
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg); 
+        }
+        .accordion-content {
+            background-color: var(--input-bg);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding: 0 20px;
+        }
+        .accordion-content.open {
+            padding: 20px;
+        }
+        
+        /* Скрываем статус, когда он пуст (по умолчанию) */
+        #configStatus {
+            display: none;
+        }
+        /* Добавляем верхний отступ, только если статус виден */
+        #configStatus[style*="block"] {
+            margin-top: 15px !important;
+        }
+
+        /* --- СТИЛИ ДЛЯ ИНЛАЙН-СПИННЕРА --- */
+        .inline-spinner-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--text-color);
+            padding: 2px 0; 
+        }
+
+        .inline-spinner {
+            border: 4px solid var(--table-border);
+            border-top: 4px solid var(--button-bg);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        body.dark .inline-spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #5a9df0;
+        }
+
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+		
+		 /* --- СТИЛИ ДЛЯ РЕДАКТИРУЕМОГО ПОЛЯ EMAIL --- */
+        .email-input {
+            width: 95%;
+            padding: 6px 8px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+            transition: border 0.3s;
+            margin: 0;
+            display: inline-block;
+        }
+        .email-input:focus {
+            border-color: var(--button-bg);
+            outline: none;
+        }
+

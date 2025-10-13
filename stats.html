@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Статистика споживання</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        // Код для переключения темы и меню, необходимый для работы боковой панели.
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById("sideMenu");
+            menu.classList.toggle("open");
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Загрузка сохраненной темы
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark');
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <button class="menu-button" onclick="toggleMenu()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+
+        <div class="form-wrapper">
+
+            <div class="side-menu" id="sideMenu">
+                <button class="close-button" onclick="toggleMenu()">❌</button>
+                <ul>
+					<li><a href="index.html">🏠 Головна</a></li> 
+                    <li><a href="history.html">📜 Історія</a></li> 
+                    <li><a href="stats.html">📈 Статистика</a></li> 
+                    <li><a href="settings.html">⚙️ Налаштування</a></li>
+                </ul>
+                <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
+            </div>
+
+            <h2>Динаміка споживання (грн/кВт)</h2>
+
+            <div class="chart-container-scroll">
+                <iframe 
+                    width="1000px" 
+                    height="600" 
+                    seamless 
+                    frameborder="0" 
+                    scrolling="no" 
+                    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS_qJElkXRDX_zVtDHpMVcclSpo2KRNef03sZ_kbfrEbdO-C8XvqSvJyLzXwmLNfSHHVkCD0RA5Kbsy/pubchart?oid=268230450&amp;format=interactive"
+                ></iframe>
+            </div>
+            
+        </div>
+    </div>
+</body>
+
+</html>
+
