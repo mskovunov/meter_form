@@ -82,10 +82,19 @@
 
       <button type="submit">Відправити</button>
     </form>
-
-    <button id="historyButton" type="button" onclick="loadHistory()">📊 Поточний місяць</button>
-
-    <div id="history" style="display:none;"></div>
+    
+    <!-- ИЗМЕНЕНИЕ 2: СТРУКТУРА АККОРДЕОНА ДЛЯ ИСТОРИИ -->
+    <div class="accordion-item button-like">
+        <div class="accordion-header" id="historyHeader" onclick="toggleHistoryAccordion()">
+            <span class="accordion-title">📊 Поточний місяць</span>
+            <span class="accordion-icon" style="display: none;">▼</span>
+        </div>
+        <div class="accordion-content" id="historyContent">
+            <!-- Здесь будет лоадер при первом открытии -->
+            <div id="history"></div>
+        </div>
+    </div>
+    <!-- КОНЕЦ АККОРДЕОНА -->
 
  <p id="status"></p>
     
@@ -96,10 +105,70 @@
 
   <script>
   
-  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';		
-  const BUILD_VERSION = 'v2025.10.13.1359'; 
+  //const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxiFpwrkbINal0wGhPxMy0wd452HF3Q64yPqXyntLG9HC7gIus6zY2hQoqrcWH_EROf/exec';	// test_meter - test
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';    // meter_form - DEV
+  const BUILD_VERSION = 'v2025.10.13.1959'; 
 
-	
+    /* --- НОВАЯ ФУНКЦИЯ АККОРДЕОНА (ИЗ settings.html) --- */
+    function toggleAccordion(contentId, buffer = 50) {
+        const content = document.getElementById(contentId);
+        const header = content.previousElementSibling; 
+        const icon = header.querySelector('.accordion-icon');
+        
+        content.classList.toggle('open');
+        header.classList.toggle('active');
+
+        if (content.classList.contains('open')) {
+            // Развернуть: устанавливаем max-height на фактическую высоту контента + БУФЕР
+            content.style.maxHeight = (content.scrollHeight + buffer) + "px"; 
+            icon.innerHTML = '▲';
+        } else {
+            // Свернуть
+            content.style.maxHeight = '0';
+            icon.innerHTML = '▼';
+        }
+    }
+    /* --- КОНЕЦ НОВОЙ ФУНКЦИИ --- */
+
+    // --- НОВАЯ ФУНКЦИЯ ДЛЯ ОБРАБОТКИ АККОРДЕОНА ИСТОРИИ ---
+    async function toggleHistoryAccordion() {
+        const contentId = 'historyContent';
+        const content = document.getElementById(contentId);
+        const historyDiv = document.getElementById('history');
+        const isOpening = !content.classList.contains('open');
+
+        // Сворачиваем/разворачиваем
+        toggleAccordion(contentId);
+        
+        // Если блок открывается, и данные еще не загружены
+        if (isOpening && historyDiv.innerHTML.trim() === '') {
+             
+            historyDiv.innerHTML = `<p style="text-align: center;">
+                <span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Завантаження історії...</span>
+            </p>`;
+            
+            // Принудительный перерасчет высоты, чтобы показать лоадер
+            content.style.maxHeight = (content.scrollHeight + 50) + "px";
+
+            try {
+                const resp = await fetch(WEBAPP_URL + '?history=1');
+                const html = await resp.text();
+                historyDiv.innerHTML = html;
+            } catch (err) {
+                historyDiv.innerHTML = '<p style="color: var(--status-error); text-align: center;">⚠️ Помилка при завантаженні історії.</p>';
+                console.error('Помилка історії:', err);
+            }
+            
+            // Финальный перерасчет высоты, чтобы вместить загруженный контент (таблицу или ошибку)
+            // Используем таймаут, чтобы дать браузеру время на рендеринг таблицы
+            setTimeout(() => {
+                 content.style.maxHeight = (content.scrollHeight + 50) + "px";
+            }, 50);
+        }
+    }
+    // --- КОНЕЦ НОВОЙ ФУНКЦИИ ---
+
+
     async function loadPreviousReading() {
       try {
         const resp = await fetch(WEBAPP_URL + '?getLast=1');
@@ -110,6 +179,8 @@
       }
     }
 
+    // ИЗМЕНЕНИЕ 3: Удалена старая функция loadHistory()
+    /*
     async function loadHistory() {
       const historyDiv = document.getElementById('history');
       const button = document.getElementById('historyButton');
@@ -129,6 +200,7 @@
         button.innerText = 'Переглянути історію';
       }
     }
+    */
 	
 /* --- ДОБАВЛЕНО: loadPortStatusFromSheet (с управлением загрузчиком) --- */
     async function loadPortStatusFromSheet() {

@@ -47,7 +47,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 410px;
   text-align: center;
   min-height: 80vh; /* ГАРАНТИРУЕТ, что высота контейнера не меньше высоты окна */
   padding-bottom: 20px; /* Дополнительный отступ снизу */
@@ -160,8 +160,9 @@ button:hover {
 
 /* 📊 Таблиця історії */
 #history {
-  margin-top: 30px;
+  margin-top: 0px;
   text-align: left;
+  padding: 0;
 }
 
 #history h3 {
@@ -621,10 +622,41 @@ label {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out, padding 0.3s ease-out;
-            padding: 0 20px;
+
         }
         .accordion-content.open {
-            padding: 20px;
+
+        }
+		
+		        /* НОВЫЙ СТИЛЬ: Аккордеон как Кнопка (для index.html) */
+        .accordion-item.button-like {
+            margin-top: 10px; /* Отступ как у обычной кнопки */
+            box-shadow: none; /* Убираем тень */
+            border: none; /* Убираем рамку */
+            transition: transform 0.2s;
+        }
+        .accordion-item.button-like:hover {
+            transform: translateY(-2px);
+        }
+        .accordion-item.button-like .accordion-header {
+            background-color: var(--button-bg); /* Синий фон */
+            color: #fff; /* Белый текст */
+            padding: 14px 0; /* Padding как у кнопки */
+            border-radius: 8px; /* Закругление */
+            font-size: 1.1rem; /* Размер шрифта */
+            justify-content: center; /* Центрирование содержимого */
+            gap: 10px;
+        }
+        .accordion-item.button-like .accordion-header:hover {
+            background-color: var(--button-hover); /* Ховер как у кнопки */
+        }
+        .accordion-item.button-like .accordion-header .accordion-title {
+            text-align: center; /* Центрируем текст внутри */
+        }
+        .accordion-item.button-like .accordion-icon {
+            color: #fff; /* Белая стрелка */
+            font-size: 0.8rem; /* Уменьшаем стрелку */
+            margin-left: 0; /* Убираем лишний отступ */
         }
         
         /* Скрываем статус, когда он пуст (по умолчанию) */
