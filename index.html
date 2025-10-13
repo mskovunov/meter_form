@@ -5,11 +5,101 @@
   <title>Передача показників</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+  	  <!-- Кнопка меню -->
+	<button class="menu-button" onclick="toggleMenu()">
+	  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M4 6H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+	  </svg>
+	</button>
+  <div class="form-wrapper">
+
+
+	<!-- Боковое меню -->
+	<div class="side-menu" id="sideMenu">
+	  <button class="close-button" onclick="toggleMenu()">❌</button>
+	  <ul>
+		<li><a href="index.html">🏠 Головна</a></li> 
+		<li><a href="history.html">📜 Історія</a></li> 
+		<li><a href="stats.html">📈 Статистика</a></li>
+		<li><a href="settings.html">⚙️ Налаштування</a></li>
+		<li><a href="#" onclick="closeWebView()">🚪 Вихід</a></li> 
+	  </ul>
+	  <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
+	</div>
+    
+
+    <h2>Форма для передачі показників лічильника</h2>
+
+<label>🔌 Статус порта зарядки: </label>
+<!-- ИЗМЕНЕНИЕ 1: Блок порта теперь является контейнером для загрузчика -->
+<div class="port-status-block"> 
+  
+  <!-- ДОБАВЛЕНИЕ 1: Элемент загрузки (отображается по умолчанию) -->
+  <div class="status-loader-wrapper" id="portLoader">
+      <div class="status-loader"></div>
+  </div>
+  <!-- КОНЕЦ ДОБАВЛЕНИЯ -->
+  
+  <div class="port-status-content">
+    <div class="port-indicator" id="portIndicator">
+      <img src="img/Type_2_transp.png" alt="Type-2 порт" class="port-icon">
+    </div>
+    
+  <div class="port-toggle-wrapper">
+    <label class="switch">
+      <input type="checkbox" id="portToggle" onchange="togglePortStatus()">
+      <span class="slider"></span>
+    </label>
+    <div id="portStatusText" class="port-status-label">Доступний</div>
+  </div>
+  </div>
+</div>
+	
+    <form id="meterForm">
+	
+      <label>Попередній показник:
+        <input type="number" id="prevReading" readonly placeholder="Завантаження...">
+      </label>
+
+      <label>Новий показник:
+        <input type="number" name="reading" required step="0.1" min="0" placeholder="Наприклад: 405.5">
+      </label>
+
+      <label>Користувач:
+        <select name="name" required>
+          <option value="" disabled selected>Оберіть користувача</option>
+          <option value="eGolf">eGolf</option>
+          <option value="iONIQ">iONIQ</option>
+          <option value="інше">інше</option>
+        </select>
+      </label>
+
+      <button type="submit">Відправити</button>
+    </form>
+
+    <button id="historyButton" type="button" onclick="loadHistory()">📊 Поточний місяць</button>
+
+    <div id="history" style="display:none;"></div>
+
+ <p id="status"></p>
+    
+    <p id="buildVersion" style="margin-top: 20px; font-size: 0.75rem; color: #999; text-align: center;"></p>
+</div>
+  </div>
+  </div>
 
   <script>
-    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';
-	const BUILD_VERSION = 'v2025.10.07'; // <-- ДОБАВЛЕНО
+  
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';		
+  const BUILD_VERSION = 'v2025.10.13.1359'; 
 
+	
     async function loadPreviousReading() {
       try {
         const resp = await fetch(WEBAPP_URL + '?getLast=1');
@@ -40,9 +130,10 @@
       }
     }
 	
-
-/* --- ДОБАВЛЕНО: loadPortStatusFromSheet (для устранения ошибки на странице) --- */
+/* --- ДОБАВЛЕНО: loadPortStatusFromSheet (с управлением загрузчиком) --- */
     async function loadPortStatusFromSheet() {
+        const loader = document.getElementById('portLoader');
+        
         try {
             const resp = await fetch(WEBAPP_URL + '?getPortStatus=1');
             const status = (await resp.text()).trim(); 
@@ -50,8 +141,12 @@
             updatePortToggleUI(status);
         } catch (err) {
             console.error('Помилка при отриманні статусу порта:', err);
+            // Если GAS недоступен, используем значение из localStorage (по умолчанию 'available')
             const saved = localStorage.getItem("portStatus") || "available";
             updatePortToggleUI(saved);
+        } finally {
+            // ИЗМЕНЕНИЕ 2: Скрываем загрузчик после завершения операции
+            loader.classList.add('hidden');
         }
     }
     /* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
@@ -107,120 +202,26 @@ function updatePortToggleUI(status) {
       .catch(console.error);
     }
 
-
-/* --- ИСПРАВЛЕНИЕ: setupPortStatusToggle() заменена на loadPortStatusFromSheet() --- */
-/*
-function setupPortStatusToggle() {
-  const saved = localStorage.getItem("portStatus") || "available";
-  updatePortToggleUI(saved);
-}
-*/
-
+	
+/* --- ИСПРАВЛЕННЫЙ И ОБЪЕДИНЕННЫЙ DOMContentLoaded --- */
     window.addEventListener('DOMContentLoaded', () => {
-	  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-	  // --- ИСПРАВЛЕНИЕ МЕРЦАНИЯ ---
-	  // 1. СИНХРОННО: Читаем последний сохраненный статус для немедленного отображения (устраняет мерцание)
-      const initialStatus = localStorage.getItem("portStatus") || "available";
-      updatePortToggleUI(initialStatus); 
-      
-	  // 2. АСИНХРОННО: Запрашиваем актуальный статус из GAS (он обновит UI через 1-2 сек)
-	  loadPortStatusFromSheet(); 
-	  // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	  
+	  // АСИНХРОННО: Запрашиваем актуальный статус из GAS 
+	  loadPortStatusFromSheet(); 
 	  
       loadPreviousReading();
       if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark');
       }
-      document.getElementById('buildVersion').textContent = BUILD_VERSION; // <-- ДОБАВЛЕНО
+      document.getElementById('buildVersion').textContent = BUILD_VERSION; 
     });
-/* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
-	function toggleMenu() {
-  const menu = document.getElementById("sideMenu");
-  menu.classList.toggle("open");
-}
 
-  </script>
-</head>
-<body>
+		function toggleMenu() {
+	  const menu = document.getElementById("sideMenu");
+	  menu.classList.toggle("open");
+	}
 
-  <div class="container">
-  	  <!-- Кнопка меню -->
-	<button class="menu-button" onclick="toggleMenu()">
-	  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-		<path d="M4 6H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-		<path d="M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-	  </svg>
-	</button>
-  <div class="form-wrapper">
-
-
-	<!-- Боковое меню -->
-	<div class="side-menu" id="sideMenu">
-	  <button class="close-button" onclick="toggleMenu()">❌</button>
-	  <ul>
-		<li><a href="index.html">🏠 Головна</a></li> 
-		<li><a href="history.html">📜 Історія</a></li> 
-		<li><a href="stats.html">📈 Статистика</a></li>
-		<li><a href="#">⚙️ Налаштування</a></li>
-	  </ul>
-	  <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
-	</div>
-    
-
-    <h2>Форма для передачі показників лічильника</h2>
-
-<label>🔌 Статус порта зарядки: </label>
-<div class="port-status-block">
-  <div class="port-status-content">
-    <div class="port-indicator" id="portIndicator">
-      <img src="img/Type_2_transp.png" alt="Type-2 порт" class="port-icon">
-    </div>
-    
-  <div class="port-toggle-wrapper">
-    <label class="switch">
-      <input type="checkbox" id="portToggle" onchange="togglePortStatus()">
-      <span class="slider"></span>
-    </label>
-    <div id="portStatusText" class="port-status-label">Доступний</div>
-  </div>
-  </div>
-</div>
 	
-    <form id="meterForm">
-	
-      <label>Попередній показник:
-        <input type="number" id="prevReading" readonly placeholder="Завантаження...">
-      </label>
-
-      <label>Новий показник:
-        <input type="number" name="reading" required step="0.1" placeholder="Наприклад: 405.5">
-      </label>
-
-      <label>Користувач:
-        <select name="name" required>
-          <option value="" disabled selected>Оберіть користувача</option>
-          <option value="eGolf">eGolf</option>
-          <option value="iONIQ">iONIQ</option>
-          <option value="інше">інше</option>
-        </select>
-      </label>
-
-      <button type="submit">Відправити</button>
-    </form>
-
-    <button id="historyButton" type="button" onclick="loadHistory()">📊 Поточний місяць</button>
-
-    <div id="history" style="display:none;"></div>
-
- <p id="status"></p>
-    
-    <p id="buildVersion" style="margin-top: 20px; font-size: 0.75rem; color: #999; text-align: center;"></p>
-</div>
-  </div>
-  </div>
-
-  <script>
     const form = document.getElementById("meterForm");
     const status = document.getElementById("status");
 
@@ -282,7 +283,18 @@ function setupPortStatusToggle() {
         // 4. УДАЛЕНА вся логика с win.open и win.close
       }
     });
-/* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
+
+		/* --- ДОБАВЛЕНО: ФУНКЦИЯ ЗАКРЫТИЯ WEBVIEW --- */
+		function closeWebView() {
+			console.log("Attempting to close WebView...");
+			// Проверка наличия нативного Android-интерфейса
+			if (typeof Android !== 'undefined' && Android.closeApp) {
+				Android.closeApp();
+			} else {
+				// Fallback для обычного браузера
+				console.warn("Native Android closeApp interface not found. Cannot close application.");
+			}
+		}
   </script>
 </body>
 </html>

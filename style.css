@@ -438,7 +438,7 @@ label {
   padding: 20px 15px;
   transform: translateX(-100%); 
   transition: transform 0.3s ease;
-  z-index: 10;
+  z-index: 15;
   display: flex;
   flex-direction: column;
   
@@ -463,3 +463,226 @@ label {
     /* Максимальная ширина iframe ограничена контейнером */
     max-width: none; 
 }
+
+ /* ---------------------------------------------------- */
+    /* --- CSS ДЛЯ АНИМАЦИИ ЗАГРУЗКИ (Loader CSS) --- */
+    /* ---------------------------------------------------- */
+    .port-status-block {
+      position: relative;
+    }
+    
+    .status-loader-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80px; /* Занимает высоту блока порта */
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: var(--input-bg, #fff); /* Фон, чтобы скрыть содержимое */
+        z-index: 10;
+        border-radius: 12px;
+    }
+
+    /* Анимация крутящегося колеса (Spinner) */
+    .status-loader {
+      border: 4px solid var(--input-border, #f3f3f3);
+      border-top: 4px solid var(--button-hover, #4a90e2); 
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Скрывает загрузчик после загрузки данных */
+    .status-loader-wrapper.hidden {
+        display: none;
+    }
+	
+ /* ---------------------------------------- */	
+ /* ---------СТИЛИ ДЛЯ SETTINGS.HTML-------- */	
+ /* ---------------------------------------- */	
+ 
+        /* --- СТИЛИ ДЛЯ ТАБЛИЦЫ КОНФИГУРАЦИИ --- */
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .config-table th, .config-table td {
+            padding: 10px 8px;
+            border: 1px solid var(--table-border);
+            text-align: left;
+        }
+        /* ВЫРАВНИВАНИЕ: Принудительное выравнивание заголовков по центру, кроме первой колонки */
+        .config-table thead th {
+            background-color: var(--table-th-bg);
+            color: var(--text-color);
+            text-align: left; /* Сброс глобального центрирования для всех th */
+        }
+        .config-table thead th:not(:first-child) {
+            text-align: center; /* Центрируем, кроме первой */
+        }
+        
+        /* Стилизация строк и hover */
+        .config-table tbody tr:nth-child(even) {
+            background-color: var(--table-row-alt);
+        }
+        .config-table tbody tr:hover {
+            background-color: var(--table-hover);
+        }
+        
+        /* Стилизуем первую колонку для выравнивания */
+        .config-table td:first-child {
+            padding-left: 15px; /* Небольшой отступ слева для имени */
+        }
+
+        /* Выравнивание индикаторов статуса по центру */
+        .config-table .status-col {
+            text-align: center;
+            width: 25%;
+        }
+        
+        /* --- СТИЛИ ДЛЯ ИНДИКАТОРОВ СТАТУСА --- */
+        .status-indicator {
+            font-weight: bold;
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer; 
+            transition: background-color 0.2s;
+        }
+        .status-indicator:hover {
+            filter: brightness(1.1);
+        }
+        .status-loading {
+            pointer-events: none; 
+            opacity: 0.6;
+        }
+        .status-active {
+            background-color: rgba(46, 125, 50, 0.2); 
+            color: var(--status-success);
+        }
+        .status-inactive {
+            background-color: rgba(198, 40, 40, 0.2); 
+            color: var(--status-error);
+        }
+        .row-active {
+            border-left: 4px solid var(--status-success);
+        }
+        
+        /* --- СТИЛИ ДЛЯ АККОРДЕОНА --- */
+        .accordion-item {
+            margin-top: 20px;
+            border: 1px solid var(--table-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .accordion-header {
+            background-color: var(--table-th-bg);
+            color: var(--text-color);
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+            text-align: left; /* Важно для переноса текста */
+        }
+        /* ГАРАНТИРУЕТ КОРРЕКТНОЕ ВЫРАВНИВАНИЕ ПРИ ПЕРЕНОСЕ */
+        .accordion-header .accordion-title {
+            flex-grow: 1;
+            text-align: left; /* Главное исправление: гарантируем левое выравнивание для переноса */
+        }
+
+        .accordion-header:hover {
+            background-color: var(--table-hover);
+        }
+        .accordion-icon {
+            font-size: 1rem;
+            margin-left: 10px;
+            transition: transform 0.3s;
+            flex-shrink: 0; 
+        }
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg); 
+        }
+        .accordion-content {
+            background-color: var(--input-bg);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding: 0 20px;
+        }
+        .accordion-content.open {
+            padding: 20px;
+        }
+        
+        /* Скрываем статус, когда он пуст (по умолчанию) */
+        #configStatus {
+            display: none;
+        }
+        /* Добавляем верхний отступ, только если статус виден */
+        #configStatus[style*="block"] {
+            margin-top: 15px !important;
+        }
+
+        /* --- СТИЛИ ДЛЯ ИНЛАЙН-СПИННЕРА --- */
+        .inline-spinner-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--text-color);
+            padding: 2px 0; 
+        }
+
+        .inline-spinner {
+            border: 4px solid var(--table-border);
+            border-top: 4px solid var(--button-bg);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        body.dark .inline-spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #5a9df0;
+        }
+
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+		
+		 /* --- СТИЛИ ДЛЯ РЕДАКТИРУЕМОГО ПОЛЯ EMAIL --- */
+        .email-input {
+            width: 95%;
+            padding: 6px 8px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+            transition: border 0.3s;
+            margin: 0;
+            display: inline-block;
+        }
+        .email-input:focus {
+            border-color: var(--button-bg);
+            outline: none;
+        }
+
