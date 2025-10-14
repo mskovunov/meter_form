@@ -5,6 +5,15 @@
   <title>Передача показників</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-N0T0138X0Q"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-N0T0138X0Q');
+	</script>
 </head>
 <body>
 
@@ -105,7 +114,7 @@
   <script src="config.js"></script>
 	
   <script>
-  const BUILD_VERSION = 'v2025.10.14.1259'; 
+  const BUILD_VERSION = 'v2025.10.14.2059'; 
 
     function toggleAccordion(contentId, buffer = 50) {
         const content = document.getElementById(contentId);
@@ -238,7 +247,12 @@ function updatePortToggleUI(status) {
       const isBusy = document.getElementById("portToggle").checked;
       const status = isBusy ? "busy" : "available";
       const statusValue = isBusy ? "1" : "0";
-
+	  
+	  if (typeof GoogleAnalytics !== 'undefined') {
+        const eventName = isBusy ? 'port_set_busy' : 'port_set_available';
+        GoogleAnalytics.logEvent(eventName);
+	  }
+	
       localStorage.setItem("portStatus", status);
       updatePortToggleUI(status);
 
@@ -334,9 +348,17 @@ function updatePortToggleUI(status) {
         if (success) {
             status.innerText = "✅ Дані успішно відправлені!";
             status.classList.add("success");
+			// Отправка аналитики в Гугл
+			if (typeof GoogleAnalytics !== 'undefined') {
+            const user = form.name.value;
+            const reading = form.reading.value;
+            GoogleAnalytics.logSubmitEvent(user, reading);
+			}
             // Сброс формы и обновление предыдущего показателя только при успехе
             form.reset();
             loadPreviousReading(); 
+			
+			
         } else {
             status.innerText = "⚠️ Помилка при відправці даних!";
             status.classList.add("error");
