@@ -5,10 +5,11 @@
     <title>Історія показників</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-
+    
+	<!-- Подключаем файл конфигурации ПЕРЕД основным скриптом -->
+    <script src="config.js"></script>
+	
     <script>
-        const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyvl_C5rbp6v9Xk_zHv-cbxNNhvbgXCzghiq7gxXol-AynQDOZWYdNuf9-ECriA7J0G/exec';
-
         // Список месяцев, на основе Ваших данных за 2025 год
         const MONTHS = [
 		    { value: "2025-10", text: "Жовтень 2025" }, // <--- ДОБАВЛЕНО

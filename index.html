@@ -37,14 +37,12 @@
     <h2>Форма для передачі показників лічильника</h2>
 
 <label>🔌 Статус порта зарядки: </label>
-<!-- ИЗМЕНЕНИЕ 1: Блок порта теперь является контейнером для загрузчика -->
 <div class="port-status-block"> 
   
   <!-- ДОБАВЛЕНИЕ 1: Элемент загрузки (отображается по умолчанию) -->
   <div class="status-loader-wrapper" id="portLoader">
       <div class="status-loader"></div>
   </div>
-  <!-- КОНЕЦ ДОБАВЛЕНИЯ -->
   
   <div class="port-status-content">
     <div class="port-indicator" id="portIndicator">
@@ -103,13 +101,12 @@
   </div>
   </div>
 
+  <!-- Подключаем файл конфигурации ПЕРЕД основным скриптом -->
+  <script src="config.js"></script>
+	
   <script>
-  
-  //const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxiFpwrkbINal0wGhPxMy0wd452HF3Q64yPqXyntLG9HC7gIus6zY2hQoqrcWH_EROf/exec';	// test_meter - test
-  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';    // meter_form - DEV
-  const BUILD_VERSION = 'v2025.10.13.1959'; 
+  const BUILD_VERSION = 'v2025.10.14.1259'; 
 
-    /* --- НОВАЯ ФУНКЦИЯ АККОРДЕОНА (ИЗ settings.html) --- */
     function toggleAccordion(contentId, buffer = 50) {
         const content = document.getElementById(contentId);
         const header = content.previousElementSibling; 
@@ -128,7 +125,6 @@
             icon.innerHTML = '▼';
         }
     }
-    /* --- КОНЕЦ НОВОЙ ФУНКЦИИ --- */
 
     // --- НОВАЯ ФУНКЦИЯ ДЛЯ ОБРАБОТКИ АККОРДЕОНА ИСТОРИИ ---
     async function toggleHistoryAccordion() {
@@ -251,10 +247,10 @@ function updatePortToggleUI(status) {
       let notificationMessage;
       
       if (status === "busy") {
-          notificationTitle = "Статус порта: ЗАЙНЯТИЙ";
+          notificationTitle = "Статус: ЗАЙНЯТИЙ";
           notificationMessage = "Порт зарядки позначено як зайнятий.";
       } else {
-          notificationTitle = "Статус порта: ДОСТУПНИЙ";
+          notificationTitle = "Статус: ДОСТУПНИЙ";
           notificationMessage = "Порт зарядки знову доступний для використання!";
       }
 
@@ -297,7 +293,6 @@ function updatePortToggleUI(status) {
     const form = document.getElementById("meterForm");
     const status = document.getElementById("status");
 
-   /* --- ИСПРАВЛЕНИЕ: ПЕРЕПИСЫВАНИЕ ОБРАБОТЧИКА form.addEventListener (УДАЛЕН win.open) --- */
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
@@ -370,3 +365,5 @@ function updatePortToggleUI(status) {
   </script>
 </body>
 </html>
+
+
