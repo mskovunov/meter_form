@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Середня ціна зарядки в Києві</title>
+</head>
+<body>
+  <h2>Середня вартість зарядки електромобіля в Києві</h2>
+  <div id="results">Завантаження...</div>
+
+  <script>
+    const apiKey = "f3e4af9b-7a82-4d3d-8ab3-5e48444c1eff";
+    const url = `https://api.openchargemap.io/v3/poi/?output=json&countrycode=UA&latitude=50.4501&longitude=30.5234&distance=20&maxresults=100&compact=true&verbose=false&key=${apiKey}`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const dcPrices = [];
+        const acPrices = [];
+
+        data.forEach(station => {
+          const usageCost = station.UsageCost || "";
+          const dcMatch = usageCost.match(/DC\s*-\s*(\d+(\.\d+)?)\s*UAH/);
+          const acMatch = usageCost.match(/AC\s*-\s*(\d+(\.\d+)?)\s*UAH/);
+
+          if (dcMatch) dcPrices.push(parseFloat(dcMatch[1]));
+          if (acMatch) acPrices.push(parseFloat(acMatch[1]));
+        });
+
+        const average = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : "немає даних";
+
+        document.getElementById("results").innerHTML = `
+          <p><strong>DC зарядка:</strong> ${average(dcPrices)} грн/кВт⋅ч</p>
+          <p><strong>AC зарядка:</strong> ${average(acPrices)} грн/кВт⋅ч</p>
+        `;
+      })
+      .catch(error => {
+        console.error("Помилка при отриманні даних:", error);
+        document.getElementById("results").innerText = "Не вдалося завантажити дані.";
+      });
+  </script>
+</body>
+</html>

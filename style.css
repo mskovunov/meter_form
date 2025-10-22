@@ -42,6 +42,7 @@ body {
 }
 
 .container {
+  position: relative;
   background-color: var(--input-bg);
   padding: 25px 20px;
   border-radius: 12px;
@@ -69,6 +70,8 @@ label {
 
 input[type="text"],
 input[type="number"],
+input[type="email"],
+input[type="password"],
 select {
   width: 100%;
   padding: 12px 14px;
@@ -339,8 +342,8 @@ label {
 
 .menu-button {
   
-  top: 12px;           /* отступ сверху */
-  left: 12px;          /* или right: 12px; если нужно справа */
+  top: 15px;           /* отступ сверху */
+  left: 15px;          /* или right: 12px; если нужно справа */
   width: 36px;         /* фиксированный размер */
   height: 36px;
   font-size: 1.4rem;
@@ -358,6 +361,96 @@ label {
 
 .menu-button:hover {
   transform: scale(1.2);
+}
+
+/* --- СТИЛИ ДЛЯ ВЫДЕЛЕНИЯ БЛОКА ЛОГИНА (USERNAME) --- */
+#user-info-header {
+    /* Position relative to the container which has padding: 25px 20px; */
+    position: absolute;
+    top: 35px; /* Отступ сверху, чтобы не конфликтовать с кнопкой меню */
+    right: 25px; /* Отступ справа */
+    
+    /* Используем Flexbox для размещения логина и кнопки в один ряд */
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Промежуток между логином и кнопкой */
+
+    /* Визуальное выделение (сохраняем, но убираем border и padding на контейнере) */
+    background-color: transparent; 
+    padding: 0; 
+    border-radius: 0; 
+    border: none;
+    box-shadow: none;
+    
+    /* Сохранение существующих правил */
+    font-size: 0.85rem; 
+    color: var(--text-color-secondary); 
+    max-width: 55%; 
+    z-index: 10; 
+    cursor: default;
+}
+
+#user-info-wrapper {
+    /* Карточка теперь вокруг username для лучшего визуального эффекта */
+    background-color: var(--input-bg);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--button-bg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    cursor: pointer;
+    /* ИЗМЕНЕНО: Добавляем transform в transition */
+    transition: background-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s; 
+}
+
+#user-info-wrapper:hover {
+    /* ДОБАВЛЕНО: Эффект подъема, как у кнопки "Відправити" */
+    transform: translateY(-2px); 
+    /* Усилим тень, чтобы подчеркнуть, что элемент поднялся */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    
+    /* Сохраняем предыдущий эффект для фона */
+    opacity: 0.9;
+    background-color: var(--table-hover);
+}
+
+#user-email-display {
+    font-weight: bold;
+    color: var(--button-bg); /* Акцентный цвет */
+    display: block;
+}
+
+/* --- НОВЫЙ СТИЛЬ: КНОПКА ВЫХОДА (Иконка) --- */
+#logout-inline-button {
+    /* Сбрасываем стили основной кнопки */
+    background: none;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%; /* Круглая форма */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, transform 0.2s;
+    margin-top: 0;
+    flex-shrink: 0; /* Чтобы не сжималась */
+}
+
+#logout-inline-button svg {
+    color: var(--status-error); /* Красный цвет для иконки выхода */
+    width: 18px;
+    height: 18px;
+}
+
+#logout-inline-button:hover {
+    background-color: var(--table-hover); /* Светлый фон при наведении */
+    transform: scale(1.1);
 }
 
 /* Сайд-меню */
@@ -425,6 +518,7 @@ label {
   overflow: hidden; /* важно, чтобы меню не вылезало за пределы формы */
   min-height: 80vh;
 }
+
 
 /* Правила для меню внутри form-wrapper */
 .form-wrapper .side-menu {
@@ -718,3 +812,228 @@ label {
             outline: none;
         }
 
+		/* --- СТИЛЬ КНОПКИ GOOGLE --- */
+		.google-button {
+			width: 100%;
+			/* Перезаписываем стили action-button, если они есть */
+			background-color: white !important;
+			color: #4285F4 !important; /* Фирменный синий Google */
+			border: 1px solid #ddd;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+
+		.google-button:hover {
+			background-color: #f1f1f1 !important;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+		}
+		
+
+/* --- СТИЛИ ДЛЯ ЗАКЛАДОК (ТАБОВ) --- */
+.tabs {
+    margin-top: 25px;
+    border: none;
+    box-shadow: none;
+    background-color: transparent; /* Убираем фон, чтобы не конфликтовал с контейнером */
+}
+
+.tab-buttons {
+    display: flex;
+    justify-content: space-around;
+    padding: 0; 
+    
+    /* Отступ между кнопками, который выглядит как разделитель */
+    gap: 8px; 
+    
+    margin-bottom: 8px; /* Минимальный отступ от контента */
+    background-color: transparent; 
+    border-bottom: none;
+}
+
+.tab-button {
+    flex-grow: 1;
+    padding: 12px 10px; 
+    
+    /* НЕАКТИВНОЕ СОСТОЯНИЕ */
+    border: 1px solid var(--input-border); /* Четкий контур */
+    background-color: var(--table-th-bg); /* Светлый фон для контраста */
+    border-radius: 8px; /* Округлые углы */
+    
+    cursor: pointer;
+    font-size: 1.05rem; 
+    color: var(--text-color-secondary); 
+    transition: all 0.3s ease-in-out, box-shadow 0.3s; 
+    outline: none;
+    position: relative;
+    overflow: hidden;
+    font-weight: 500; 
+}
+
+.tab-button:hover {
+    background-color: var(--table-hover);
+    color: var(--text-color);
+}
+
+.tab-button.active {
+    /* АКТИВНОЕ СОСТОЯНИЕ */
+    color: var(--button-bg); 
+    font-weight: bold;
+    background-color: var(--input-bg);
+    border-color: var(--button-bg); /* Контрастная рамка */
+    box-shadow: 0 0 10px rgba(52, 144, 226, 0.3); /* Яркая тень */
+    z-index: 2; 
+}
+
+/* Удаляем подчеркивание снизу, так как оно не нужно для этого стиля */
+.tab-button::before,
+.tab-button.active::before { 
+    content: none;
+}
+
+/* Стили для содержимого вкладок */
+.tab-content {
+    display: none;
+    padding: 20px;
+    
+    /* Контур вокруг всего блока контента */
+    border: 1px solid var(--input-border); 
+    
+    /* Округление всего блока контента */
+    border-radius: 8px; 
+    
+    /* УДАЛЕНО: margin-top: -15px; - это устраняет проблему срезанных углов */
+    margin-top: 0; 
+    
+    background-color: var(--input-bg);
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* --- СТИЛИ ДЛЯ ПОКАЗА/СКРЫТИЯ ПАРОЛЯ --- */
+
+.password-input-wrapper {
+    position: relative; /* Контейнер для абсолютного позиционирования кнопки */
+    /* Убираем глобальный margin-top, чтобы его задавала label */
+}
+
+/* Стилизуем input внутри wrapper'а */
+.password-input-wrapper input[type="password"],
+.password-input-wrapper input[type="text"] {
+    /* Удаляем margin-top, который задан глобально, чтобы input был вплотную к label */
+    margin-top: 5px; 
+    /* Добавляем padding справа, чтобы текст не заходил под кнопку */
+    padding-right: 40px; 
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    /* 20px - это половина padding-right + небольшой отступ */
+    right: 10px; 
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-color-secondary);
+    padding: 5px;
+    line-height: 0; /* Убираем лишний вертикальный отступ */
+    z-index: 5;
+}
+
+.toggle-password:hover {
+    color: var(--text-color);
+}
+
+/* --- СТИЛИ ДЛЯ ССЫЛКИ "ЗАБУЛИ ПАРОЛЬ" --- */
+#forgot-password-link {
+    color: var(--text-color-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+#forgot-password-link:hover {
+    color: var(--button-bg);
+    text-decoration: underline;
+}
+
+/* --- СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА (Custom Confirm) --- */
+.modal {
+    display: none; /* Скрыто по умолчанию */
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7); /* Темный полупрозрачный фон */
+    
+    /* ДОБАВЛЕНО: Для центрирования */
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center;   /* Центрируем по вертикали */
+}
+
+/* Принудительное отображение и активация анимации */
+.modal.visible {
+    display: flex; /* ИСХОДНОЕ ЗНАЧЕНИЕ: Активируем Flex для центрирования */
+}
+
+.modal-content {
+    background-color: var(--input-bg);
+    /* ИЗМЕНЕНО: Удаляем margin: auto, его заменит Flexbox */
+    /* margin: auto; */
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    
+    /* Эффект появления */
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.modal.visible .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal h3 {
+    margin-top: 0;
+    font-size: 1.4rem;
+    color: var(--text-color);
+}
+
+.modal p {
+    margin: 15px 0 25px 0;
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* Стилизация кнопок внутри модального окна */
+.modal-actions button {
+    flex-grow: 1;
+    padding: 12px 0;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-top: 0; /* Перекрываем глобальный margin-top: 10px */
+}
+
+/* Делаем кнопку отмены более нейтральной */
+.modal-actions .secondary-button {
+    background-color: var(--table-th-bg);
+    color: var(--text-color);
+    border: 1px solid var(--input-border);
+}
+.modal-actions .secondary-button:hover {
+    background-color: var(--table-hover);
+    transform: translateY(-1px);
+}

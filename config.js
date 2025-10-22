@@ -1,3 +1,9 @@
-// В этом файле хранится URL веб-приложения Google Apps Script.
+// В этом файле хранятся глобальные константы для проекта
+
+// URL веб-приложения Google Apps Script.
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxiFpwrkbINal0wGhPxMy0wd452HF3Q64yPqXyntLG9HC7gIus6zY2hQoqrcWH_EROf/exec';	// test_meter - test
   //const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwVyyh51sypiCvYZrnVRmqL3spiA4lCkdO9w1EtwpYYIdq-Hu6IUwBRtVGqbZfSgBmO/exec';    // meter_form - DEV
+
+// Номер версии сборки
+  const BUILD_VERSION = 'v2025.10.22.1759'   
+  

@@ -17,6 +17,17 @@
 </head>
 <body>
 
+	<div id="logout-modal" class="modal">
+		<div class="modal-content">
+			<h3>Підтвердження</h3>
+			<p>Ви впевнені, що хочете вийти з облікового запису?</p>
+			<div class="modal-actions">
+				<button id="modal-cancel-btn" class="secondary-button">Скасувати</button>
+				<button id="modal-confirm-btn" class="action-button modal-confirm-btn">Вийти</button>
+			</div>
+		</div>
+	</div>
+
   <div class="container">
   	  <!-- Кнопка меню -->
 	<button class="menu-button" onclick="toggleMenu()">
@@ -26,22 +37,37 @@
 		<path d="M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 	  </svg>
 	</button>
+	
+	<div id="user-info-header">
+        <div id="user-info-wrapper" onclick="showUserProfile()">
+     <span id="user-email-display" title="Ваш користувач"></span>
+        </div>
+        <button id="logout-inline-button" onclick="handleLogout()" title="Вийти з облікового запису">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+	</div>
+ 
   <div class="form-wrapper">
-
 
 	<!-- Боковое меню -->
 	<div class="side-menu" id="sideMenu">
-	  <button class="close-button" onclick="toggleMenu()">❌</button>
+	  <button class="close-button" onclick="toggleMenu()">❌</button>	  	  
 	  <ul>
 		<li><a href="index.html">🏠 Головна</a></li> 
 		<li><a href="history.html">📜 Історія</a></li> 
 		<li><a href="stats.html">📈 Статистика</a></li>
 		<li><a href="settings.html">⚙️ Налаштування</a></li>
-		<li><a href="#" onclick="closeWebView()">🚪 Вихід</a></li> 
+		<li id="admin-menu-item" style="display: none;">
+			<a href="admin.html">🔒 Адмін-панель</a>
+		</li>
+		<li><a href="#" onclick="handleExit()">🚪 Вихід</a></li> 
 	  </ul>
 	  <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
 	</div>
-    
 
     <h2>Форма для передачі показників лічильника</h2>
 
@@ -114,7 +140,7 @@
   <script src="config.js"></script>
 	
   <script>
-  const BUILD_VERSION = 'v2025.10.14.2059'; 
+	let currentUsername = null;
 
     function toggleAccordion(contentId, buffer = 50) {
         const content = document.getElementById(contentId);
@@ -183,29 +209,6 @@
         console.error('Помилка при отриманні попереднього показника:', err);
       }
     }
-
-    // ИЗМЕНЕНИЕ 3: Удалена старая функция loadHistory()
-    /*
-    async function loadHistory() {
-      const historyDiv = document.getElementById('history');
-      const button = document.getElementById('historyButton');
-      button.disabled = true;
-      button.innerText = '⏳ Завантаження...';
-
-      try {
-        const resp = await fetch(WEBAPP_URL + '?history=1');
-        const html = await resp.text();
-        historyDiv.innerHTML = html;
-        historyDiv.style.display = 'block';
-        button.style.display = 'none';
-      } catch (err) {
-        historyDiv.innerHTML = '<p>⚠️ Помилка при завантаженні історії.</p>';
-        console.error('Помилка історії:', err);
-        button.disabled = false;
-        button.innerText = 'Переглянути історію';
-      }
-    }
-    */
 	
 /* --- ДОБАВЛЕНО: loadPortStatusFromSheet (с управлением загрузчиком) --- */
     async function loadPortStatusFromSheet() {
@@ -247,6 +250,11 @@ function updatePortToggleUI(status) {
       const isBusy = document.getElementById("portToggle").checked;
       const status = isBusy ? "busy" : "available";
       const statusValue = isBusy ? "1" : "0";
+	  // ИСПРАВЛЕНО: Получаем текущего пользователя здесь, чтобы избежать ошибки ReferenceError
+      const user = firebase.auth().currentUser; // Получаем текущего пользователя Firebase
+    
+      // Используем username, если он отображается в заголовке, или пусто
+      const username = document.getElementById('user-email-display').textContent || '';	  
 	  
 	  if (typeof GoogleAnalytics !== 'undefined') {
         const eventName = isBusy ? 'port_set_busy' : 'port_set_available';
@@ -255,8 +263,13 @@ function updatePortToggleUI(status) {
 	
       localStorage.setItem("portStatus", status);
       updatePortToggleUI(status);
+	  // 1. ДОБАВЛЕНО: Логирование в Firestore
+		if (user) {
+			// Мы вызываем асинхронную функцию, но не ждем ее, чтобы не задерживать UI
+			logPortStatusChange(user, status, username);
+		}
 
-// --- ДОБАВЛЕН ВЫЗОВ УВЕДОМЛЕНИЯ ANDROID ---
+	  // 2. ДОБАВЛЕН ВЫЗОВ УВЕДОМЛЕНИЯ ANDROID
       let notificationTitle;
       let notificationMessage;
       
@@ -272,8 +285,7 @@ function updatePortToggleUI(status) {
           // Вызываем нативный метод, который покажет системное уведомление
           AndroidNotifier.showNotification(notificationTitle, notificationMessage);
       }
-      // ------------------------------------------
-
+	  // 3. Отправка данных в Google Apps Script (GAS)
       fetch(WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -302,6 +314,12 @@ function updatePortToggleUI(status) {
 	  const menu = document.getElementById("sideMenu");
 	  menu.classList.toggle("open");
 	}
+	
+	// НОВАЯ ФУНКЦИЯ: Заглушка для клика по имени пользователя
+	function showUserProfile() {
+		//alert("Переход в профиль пользователя (заглушка)");
+		console.log("Clicked on user profile link.");
+	}
 
 	
     const form = document.getElementById("meterForm");
@@ -311,7 +329,11 @@ function updatePortToggleUI(status) {
       e.preventDefault();
 
       // 1. Показываем статус "Отправка..."
-      status.innerText = '⏳ Відправка даних...';
+      //status.innerText = '⏳ Відправка даних...';
+	  status.innerHTML = `<span class="inline-spinner-wrapper">
+                            <span class="inline-spinner"></span> 
+                            Відправка даних...
+                          </span>`;
       status.classList.remove('success', 'error', 'show');
       status.classList.add('show'); // Класс 'show' делает его видимым
 
@@ -320,7 +342,8 @@ function updatePortToggleUI(status) {
       data.append("reading", form.reading.value);
 
       let success = false;
-
+	  const currentSelectedUser = form.name.value;
+	  
       try {
         const response = await fetch(WEBAPP_URL, {
           method: "POST",
@@ -357,7 +380,7 @@ function updatePortToggleUI(status) {
             // Сброс формы и обновление предыдущего показателя только при успехе
             form.reset();
             loadPreviousReading(); 
-			
+			setFormUser(currentSelectedUser);
 			
         } else {
             status.innerText = "⚠️ Помилка при відправці даних!";
@@ -373,6 +396,69 @@ function updatePortToggleUI(status) {
       }
     });
 
+		// --- ФУНКЦИЯ: Выход из системы (Logout) ---
+		// --- НОВАЯ ФУНКЦИЯ: Показать кастомное модальное окно ---
+		function showLogoutModal() {
+			const modal = document.getElementById('logout-modal');
+			const confirmBtn = document.getElementById('modal-confirm-btn');
+			const cancelBtn = document.getElementById('modal-cancel-btn');
+			
+			// 1. Показываем модальное окно
+			modal.style.display = 'flex';
+			// Добавляем класс для активации CSS-анимации
+			setTimeout(() => modal.classList.add('visible'), 10); 
+
+			// 2. Обновляем обработчики
+			// Кнопка "Вийти" (Подтверждение)
+			confirmBtn.onclick = () => {
+				hideLogoutModal();
+				handleLogoutConfirm(); // Вызываем фактическую функцию выхода
+			};
+			
+			// Кнопка "Скасувати"
+			cancelBtn.onclick = () => {
+				hideLogoutModal();
+				console.log("Выход отменен пользователем.");
+			};
+			
+			// Закрытие по клику вне окна
+			modal.onclick = (e) => {
+				if (e.target.id === 'logout-modal') {
+					hideLogoutModal();
+					console.log("Выход отменен пользователем.");
+				}
+			};
+		}
+
+		// --- НОВАЯ ФУНКЦИЯ: Скрыть модальное окно ---
+		function hideLogoutModal() {
+			const modal = document.getElementById('logout-modal');
+			modal.classList.remove('visible');
+			// Скрываем после анимации
+			setTimeout(() => { modal.style.display = 'none'; }, 200); 
+		}
+
+
+		// --- ФУНКЦИЯ: Выход из системы (Logout) - ФАКТИЧЕСКИЙ ВЫХОД ---
+		async function handleLogoutConfirm() {
+			try {
+				await auth.signOut();
+				console.log("Успешный выход из Firebase.");
+				
+				// После выхода перенаправляем на страницу авторизации
+				window.location.replace('auth.html'); 
+				
+			} catch (error) {
+				console.error("Ошибка при выходе из Firebase:", error);
+				alert("Помилка виходу: " + error.message);
+			}
+		}
+		
+		async function handleLogout() {
+			// ВЫЗЫВАЕМ КАСТОМНОЕ МОДАЛЬНОЕ ОКНО ВМЕСТО confirm()
+			showLogoutModal();
+		}
+
 		/* --- ДОБАВЛЕНО: ФУНКЦИЯ ЗАКРЫТИЯ WEBVIEW --- */
 		function closeWebView() {
 			console.log("Attempting to close WebView...");
@@ -384,7 +470,146 @@ function updatePortToggleUI(status) {
 				console.warn("Native Android closeApp interface not found. Cannot close application.");
 			}
 		}
+		
+		// Новый обработчик для меню "Вихід"
+		function handleExit() {
+			// В зависимости от того, как вы хотите обрабатывать "Вихід":
+			// 1. Если это просто выход из сессии:
+			handleLogout(); 
+			
+			// 2. Если нужно закрыть приложение (как в вашем старом коде):
+		    closeWebView();
+		}
+		
+		// --- НОВАЯ ФУНКЦИЯ: Загрузка Username из Firestore ---
+		async function loadUsername(user) {
+            if (!user) return;
+            const displayElement = document.getElementById('user-email-display');
+			const adminMenuItem = document.getElementById('admin-menu-item'); 
+			
+			// Скрываем меню по умолчанию
+			if (adminMenuItem) {
+				adminMenuItem.style.display = 'none';
+			}
+            
+            if (typeof db === 'undefined') {
+                console.error("Firestore не инициализирован. Не могу загрузить username.");
+                return; // Оставляем пустым
+            }
+            
+            const userRef = db.collection('users').doc(user.uid);
+            
+		userRef.get().then((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            
+            // 1. Отображение Username
+            if (data.username) {
+				currentUsername = data.username; // СОХРАНЯЕМ ИМЯ в глобальную переменную
+                displayElement.textContent = data.username;
+				setFormUser(currentUsername); // НОВОЕ: Вызываем функцию для установки значения в select
+            } else {
+                console.warn("Username не найден в Firestore. Оставляем поле пустым.");
+            }
+            
+            // 2. Проверка и отображение меню администратора (НОВОЕ)
+            if (adminMenuItem && data.role === 'admin') {
+                adminMenuItem.style.display = 'list-item'; // Показываем пункт меню
+                console.log("Пользователь является администратором. Отображена админ-панель.");
+            }
+        } else {
+            console.warn("Документ пользователя не найден в Firestore.");
+        }
+    }).catch((error) => {
+        console.error("Ошибка при получении данных пользователя из Firestore:", error);
+    });
+	}
+	
+	function setFormUser(username) {
+    const select = document.querySelector('select[name="name"]');
+    if (!select || !username) return;
+
+    // Ищем опцию, текст которой совпадает с username (например, 'eGolf')
+    let foundOption = false;
+    for (let i = 0; i < select.options.length; i++) {
+        const option = select.options[i];
+        
+        // Сравнение без учета регистра для надежности
+        if (option.value.toLowerCase() === username.toLowerCase()) {
+            option.selected = true;
+            foundOption = true;
+            break;
+        }
+    }
+    
+    if (foundOption) {
+        console.log(`Поле 'Користувач' установлено на: ${username}`);
+    } else {
+        console.warn(`Пользователь '${username}' не найден в списке опций формы.`);
+    }
+	}
+		
+		// --- НОВАЯ ФУНКЦИЯ: Логирование статуса порта в Firestore ---
+	async function logPortStatusChange(user, newStatus, username) {
+    if (!user || typeof db === 'undefined') {
+        console.warn("Firestore або користувач не ініціалізовані. Логування неможливе.");
+        return;
+    }
+
+    // Форматирование времени в dd.MM.yyyy HH:mm:ss
+    const now = new Date();
+    const dateTimeString = now.toLocaleDateString('uk-UA', { 
+        day: '2-digit', month: '2-digit', year: 'numeric', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit', 
+        hour12: false 
+    }).replace(',', ''); // Удаляем запятую, если она есть в локальном формате
+
+    try {
+        const logData = {
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(), // Время на сервере
+            localTime: dateTimeString, // Время в нужном формате
+            userId: user.uid,
+            username: username || user.email, // Используем username или email как запасной вариант
+            status: newStatus, // "busy" или "available"
+            statusUA: (newStatus === "busy" ? "Зайнятий" : "Доступний")
+        };
+
+        // Запись в коллекцию 'port_logs'
+        await db.collection('port_logs').add(logData);
+        console.log("Лог статуса порта успешно записан в Firestore:", logData);
+
+    } catch (error) {
+        console.error("Ошибка при записи лога порта в Firestore:", error);
+    }
+}
+		
   </script>
+  
+	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>	
+	<script src="./firebase-init.js"></script>
+	
+	<script>
+	// Проверка статуса авторизации при загрузке страницы
+    auth.onAuthStateChanged((user) => {
+        if (!user) {
+            // Если пользователь НЕ авторизован
+            console.log("Пользователь не авторизован. Перенаправление на страницу входа.");
+            // Перенаправить на страницу входа
+            window.location.replace('auth.html'); 
+        } else {
+            // Пользователь авторизован
+            console.log("Пользователь авторизован как:", user.email);
+            
+            // НОВОЕ: Загрузка и отображение username
+            loadUsername(user);
+        }
+    });
+
+    // // (Ваш существующий код для загрузки данных из GAS должен быть ниже этого блока)
+</script>
+
 </body>
 </html>
 
