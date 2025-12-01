@@ -1,541 +1,717 @@
 <!DOCTYPE html>
 <html lang="uk">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Авторизація Firebase</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0T0138X0Q"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-N0T0138X0Q"
+    ></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-      gtag('config', 'G-N0T0138X0Q');
+      gtag("config", "G-N0T0138X0Q");
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        
-        <button class="menu-button" onclick="toggleMenu()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 6H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
+      <!-- Кнопка меню -->
+      <button class="menu-button" onclick="toggleMenu()">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M4 6H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M4 12H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M4 18H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
 
-        <div class="form-wrapper">
+      <div class="form-wrapper">
+        <!-- Боковое меню зачитываем из utils.js-->
+        <div id="sidebar-placeholder"></div>
+        <h2>Авторизація</h2>
 
-            <div class="side-menu" id="sideMenu">
-                <button class="close-button" onclick="toggleMenu()">❌</button>
-                <ul>
-                    <li><a href="index.html">🏠 Головна</a></li> 
-                    <li><a href="history.html">📜 Історія</a></li> 
-                    <li><a href="stats.html">📈 Статистика</a></li>
-                    <li><a href="settings.html">⚙️ Налаштування</a></li>
-                    <li><a href="#" onclick="handleExit()">🚪 Вихід</a></li>
-                </ul>
-                <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 Змінити тему</button>
-            </div>
-            <h2>Авторизація</h2>
-            
-            <div id="auth-ui">
-                <p id="loading-status" style="text-align: center; margin-bottom: 20px;"></p>
-                
-                <div id="auth-tabs" style="display: none;">
-    
-                    <div class="tabs">
-                        <div class="tab-buttons">
-                            <button class="tab-button active" onclick="switchTab('login')">Вхід</button>
-                            <button class="tab-button" onclick="switchTab('signup')">Реєстрація</button>
-                        </div>
-                        
-                        <div id="login-tab-content" class="tab-content active">
-                          <form id="login-form"> 
-                            <label for="username-login-input">Користувач:</label>
-                            <input type="text" id="username-login-input" placeholder="Ваш логін" autocomplete="username">
-                            
-							<label for="password-input" style="margin-top: 15px; display: block;">Пароль:</label>
-							<div class="password-input-wrapper">
-								<input type="password" id="password-input" placeholder="********" autocomplete="current-password">
-								<span class="toggle-password" data-target="password-input">
-									<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off">
-										<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.48 0-8.21-3.2-9.67-8.12M4.24 4.24A10.07 10.07 0 0 1 12 4c4.48 0 8.21 3.2 9.67 8.12"></path>
-										<line x1="1" y1="1" x2="23" y2="23"></line>
-									</svg>
-								</span>
-							</div>
-							
-							<div style="text-align: right; margin-top: 5px; font-size: 0.9rem;">
-								<a href="#" id="forgot-password-link">Забули пароль?</a>
-							</div>
-                            
-                            <div style="margin-top: 25px;">
-                                <button id="login-button" class="action-button primary-button">Увійти</button>
-                            </div>
-						  </form>
-                            
-                            <div style="margin-top: 20px;">
-                                <button id="google-login-button" class="action-button google-button">
-                                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; margin-right: 10px; vertical-align: middle;">
-                                        <path fill="#4285F4" d="M22.01 12.01c0-.7-.06-1.37-.16-2.01H12v3.78h5.38c-.23 1.15-.9 2.14-1.92 2.82v2.46h3.17c1.86-1.72 2.98-4.25 2.98-7.05z"/>
-                                        <path fill="#34A853" d="M12 22c3.2 0 5.86-1.07 7.82-2.91l-3.17-2.46c-1.04.7-2.38 1.12-3.65 1.12-2.7 0-5-1.81-5.83-4.24H3.06v2.54c1.9 3.8 5.7 6.65 8.94 6.65z"/>
-                                        <path fill="#FBBC05" d="M6.17 14.15c-.24-.7-.38-1.44-.38-2.15s.14-1.45.38-2.15V7.46H3.06c-.84 1.68-1.32 3.61-1.32 5.54s.48 3.86 1.32 5.54L6.17 14.15z"/>
-                                        <path fill="#EA4335" d="M12 5.86c1.87 0 3.52.65 4.8 1.83l2.81-2.81C17.8 2.5 15.2 1.5 12 1.5c-3.2 0-7.01 2.85-8.91 6.66L6.17 9.85C7 7.42 9.3 5.86 12 5.86z"/>
-                                        <path fill="none" d="M0 0h24v24H0z"/>
-                                    </svg>
-                                    Увійти через Google
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="signup-tab-content" class="tab-content">
-                          <form id="signup-form">  
-                            <label for="signup-email-input">Електронна пошта:</label>
-                            <input type="email" id="signup-email-input" placeholder="example@domain.com" autocomplete="email">
-                            
-                            <label for="signup-username-input" style="margin-top: 15px; display: block;">Користувач:</label>
-                            <input type="text" id="signup-username-input" placeholder="Ваш логін" autocomplete="username">
-                            
-                            <label for="signup-password-input" style="margin-top: 15px; display: block;">Пароль:</label>
-							<div class="password-input-wrapper">
-								<input type="password" id="signup-password-input" placeholder="********" autocomplete="new-password">
-								<span class="toggle-password" data-target="signup-password-input">
-									<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off">
-										<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.48 0-8.21-3.2-9.67-8.12M4.24 4.24A10.07 10.07 0 0 1 12 4c4.48 0 8.21 3.2 9.67 8.12"></path>
-										<line x1="1" y1="1" x2="23" y2="23"></line>
-									</svg>
-								</span>
-							</div>
-                            
-                            <div style="margin-top: 25px;">
-                                <button id="signup-button" class="action-button primary-button">Зареєструватися</button>
-                            </div>
-						  </form>
-                        </div>
+        <div id="auth-ui">
+          <p
+            id="loading-status"
+            style="text-align: center; margin-bottom: 20px"
+          ></p>
 
-                    </div>
-                
-                    <div id="auth-status" class="status-message" style="margin-top: 20px; display: none;"></div>
+          <div id="auth-tabs" style="display: none">
+            <div class="tabs">
+              <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('login')">
+                  Вхід
+                </button>
+                <button class="tab-button" onclick="switchTab('signup')">
+                  Реєстрація
+                </button>
+              </div>
+
+              <div id="login-tab-content" class="tab-content active">
+                <form id="login-form">
+                  <label for="username-login-input">Користувач:</label>
+                  <input
+                    type="text"
+                    id="username-login-input"
+                    placeholder="Ваш логін"
+                    autocomplete="username"
+                  />
+
+                  <label
+                    for="password-input"
+                    style="margin-top: 15px; display: block"
+                    >Пароль:</label
+                  >
+                  <div class="password-input-wrapper">
+                    <input
+                      type="password"
+                      id="password-input"
+                      placeholder="********"
+                      autocomplete="current-password"
+                    />
+                    <span class="toggle-password" data-target="password-input">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="feather feather-eye-off"
+                      >
+                        <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.48 0-8.21-3.2-9.67-8.12M4.24 4.24A10.07 10.07 0 0 1 12 4c4.48 0 8.21 3.2 9.67 8.12"
+                        ></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    </span>
+                  </div>
+
+                  <div
+                    style="
+                      text-align: right;
+                      margin-top: 5px;
+                      font-size: 0.9rem;
+                    "
+                  >
+                    <a href="#" id="forgot-password-link">Забули пароль?</a>
+                  </div>
+
+                  <div style="margin-top: 25px">
+                    <button
+                      id="login-button"
+                      class="action-button primary-button"
+                    >
+                      Увійти
+                    </button>
+                  </div>
+                </form>
+
+                <div style="margin-top: 20px">
+                  <button
+                    id="google-login-button"
+                    class="action-button google-button"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      style="
+                        width: 18px;
+                        height: 18px;
+                        margin-right: 10px;
+                        vertical-align: middle;
+                      "
+                    >
+                      <path
+                        fill="#4285F4"
+                        d="M22.01 12.01c0-.7-.06-1.37-.16-2.01H12v3.78h5.38c-.23 1.15-.9 2.14-1.92 2.82v2.46h3.17c1.86-1.72 2.98-4.25 2.98-7.05z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 22c3.2 0 5.86-1.07 7.82-2.91l-3.17-2.46c-1.04.7-2.38 1.12-3.65 1.12-2.7 0-5-1.81-5.83-4.24H3.06v2.54c1.9 3.8 5.7 6.65 8.94 6.65z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M6.17 14.15c-.24-.7-.38-1.44-.38-2.15s.14-1.45.38-2.15V7.46H3.06c-.84 1.68-1.32 3.61-1.32 5.54s.48 3.86 1.32 5.54L6.17 14.15z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.86c1.87 0 3.52.65 4.8 1.83l2.81-2.81C17.8 2.5 15.2 1.5 12 1.5c-3.2 0-7.01 2.85-8.91 6.66L6.17 9.85C7 7.42 9.3 5.86 12 5.86z"
+                      />
+                      <path fill="none" d="M0 0h24v24H0z" />
+                    </svg>
+                    Увійти через Google
+                  </button>
                 </div>
-                
-                <div id="logged-in-message" style="display: none; text-align: center; padding: 20px; border: 1px solid var(--border-color); border-radius: 8px;">
-                    <h3>✅ Ви вже увійшли як: <span id="user-email-display"></span></h3>
-                    <p>Перенаправлення на головну сторінку...</p>
-                    <button id="logout-button" class="action-button" style="margin-top: 15px;">Вийти</button>
-                </div>
+              </div>
+
+              <div id="signup-tab-content" class="tab-content">
+                <form id="signup-form">
+                  <label for="signup-email-input">Електронна пошта:</label>
+                  <input
+                    type="email"
+                    id="signup-email-input"
+                    placeholder="example@domain.com"
+                    autocomplete="email"
+                  />
+
+                  <label
+                    for="signup-username-input"
+                    style="margin-top: 15px; display: block"
+                    >Користувач:</label
+                  >
+                  <input
+                    type="text"
+                    id="signup-username-input"
+                    placeholder="Ваш логін"
+                    autocomplete="username"
+                  />
+
+                  <label
+                    for="signup-password-input"
+                    style="margin-top: 15px; display: block"
+                    >Пароль:</label
+                  >
+                  <div class="password-input-wrapper">
+                    <input
+                      type="password"
+                      id="signup-password-input"
+                      placeholder="********"
+                      autocomplete="new-password"
+                    />
+                    <span
+                      class="toggle-password"
+                      data-target="signup-password-input"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="feather feather-eye-off"
+                      >
+                        <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.48 0-8.21-3.2-9.67-8.12M4.24 4.24A10.07 10.07 0 0 1 12 4c4.48 0 8.21 3.2 9.67 8.12"
+                        ></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    </span>
+                  </div>
+
+                  <div style="margin-top: 25px">
+                    <button
+                      id="signup-button"
+                      class="action-button primary-button"
+                    >
+                      Зареєструватися
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
 
-            <p id="buildVersion" style="margin-top: 20px; font-size: 0.75rem; color: #999; text-align: center;"></p>
-            
+            <div
+              id="auth-status"
+              class="status-message"
+              style="margin-top: 20px; display: none"
+            ></div>
+          </div>
+
+          <div
+            id="logged-in-message"
+            style="
+              display: none;
+              text-align: center;
+              padding: 20px;
+              border: 1px solid var(--border-color);
+              border-radius: 8px;
+            "
+          >
+            <h3>✅ Ви вже увійшли як: <span id="user-email-display"></span></h3>
+            <p>Перенаправлення на головну сторінку...</p>
+            <button
+              id="logout-button"
+              class="action-button"
+              style="margin-top: 15px"
+            >
+              Вийти
+            </button>
+          </div>
         </div>
+
+        <p
+          id="buildVersion"
+          style="
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #999;
+            text-align: center;
+          "
+        ></p>
+      </div>
     </div>
-  
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script src="./firebase-init.js"></script>
-    <script src="config.js"></script>    
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
 
-  <script>
-	    //const BUILD_VERSION = 'v2025.10.17.1600'; // Обновленный номер версии
-		
-        // --- Вспомогательные функции ---
-        function toggleTheme() {
-            const isDark = document.body.classList.toggle('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    <script>
+      // --- НОВАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ЗАКЛАДОК ---
+      function switchTab(tabName) {
+        const tabButtons = document.querySelectorAll(".tab-button");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        tabButtons.forEach((button) => {
+          button.classList.remove("active");
+          if (
+            button.textContent
+              .trim()
+              .toLowerCase()
+              .includes(tabName.toLowerCase())
+          ) {
+            button.classList.add("active");
+          }
+        });
+
+        tabContents.forEach((content) => {
+          content.classList.remove("active");
+          if (content.id === `${tabName}-tab-content`) {
+            content.classList.add("active");
+          }
+        });
+
+        document.getElementById("auth-status").style.display = "none";
+      }
+
+      function togglePasswordVisibility(targetId, toggleElement) {
+        const input = document.getElementById(targetId);
+
+        // Переключаем атрибут type
+        if (input.type === "password") {
+          input.type = "text";
+          // Иконка: Глаз открыт
+          toggleElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        } else {
+          input.type = "password";
+          // Иконка: Глаз закрыт
+          toggleElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.48 0-8.21-3.2-9.67-8.12M4.24 4.24A10.07 10.07 0 0 1 12 4c4.48 0 8.21 3.2 9.67 8.12"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
         }
-        
-        function toggleMenu() {
-            const menu = document.getElementById("sideMenu");
-            menu.classList.toggle("open");
+      }
+
+      /* --- НОВЫЕ ФУНКЦИИ ДЛЯ USERNAME/EMAIL В FIRESTORE --- */
+
+      // 1.1 Поиск Email в Firestore по Username (для ВХОДА)
+      async function findEmailByUsername(username) {
+        const usersRef = db.collection("users");
+        const searchUsername = username.toLowerCase();
+        const snapshot = await usersRef
+          .where("usernameLower", "==", searchUsername)
+          .limit(1)
+          .get();
+
+        if (snapshot.empty) {
+          return null;
         }
-        
-        function closeWebView() {
-            console.log("Attempting to close WebView...");
-            if (typeof Android !== 'undefined' && Android.closeApp) {
-                Android.closeApp();
+        return snapshot.docs[0].data().email;
+      }
+
+      // 1.2 Проверка уникальности usernameLower
+      async function checkUsernameUnique(username) {
+        const usersRef = db.collection("users");
+
+        // Приводим входной username к нижнему регистру для поиска
+        const searchUsername = username.toLowerCase();
+
+        // Ищем совпадения в поле usernameLower
+        const snapshot = await usersRef
+          .where("usernameLower", "==", searchUsername)
+          .limit(1)
+          .get();
+
+        // Возвращаем true, если совпадений нет (уникален)
+        return snapshot.empty;
+      }
+
+      // 2. ФУНКЦИЯ ДЛЯ ЗАПИСИ ДАННЫХ В FIRESTORE (ОБНОВЛЕНО ДЛЯ USERNAME)
+      async function saveUserData(user, username = null) {
+        if (!user) return;
+        const userRef = db.collection("users").doc(user.uid);
+
+        const updateData = {
+          email: user.email,
+          lastSignInTime: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (username) {
+          updateData.username = username;
+          // ДОБАВЛЕНО: Сохраняем версию в нижнем регистре для поиска
+          updateData.usernameLower = username.toLowerCase();
+        }
+
+        try {
+          if (
+            user.metadata &&
+            user.metadata.creationTime === user.metadata.lastSignInTime
+          ) {
+            updateData.createdAt =
+              firebase.firestore.FieldValue.serverTimestamp();
+          }
+        } catch (e) {
+          updateData.createdAt =
+            firebase.firestore.FieldValue.serverTimestamp();
+        }
+
+        await userRef
+          .set(updateData, { merge: true })
+          .then(() => {
+            console.log("Данные пользователя успешно сохранены в Firestore.");
+          })
+          .catch((error) => {
+            console.error(
+              "Ошибка при записи данных пользователя в Firestore:",
+              error
+            );
+          });
+      }
+
+      window.addEventListener("DOMContentLoaded", async () => {
+        // Применяем тему
+        if (localStorage.getItem("theme") === "dark") {
+          document.body.classList.add("dark");
+        }
+
+        await loadComponent("sidebar-placeholder", "sidebar.html");
+
+        if (typeof auth === "undefined") {
+          document.getElementById("loading-status").innerHTML =
+            '<p style="color: var(--status-error);">❌ Помилка: Firebase не підключений.</p>';
+          return;
+        }
+
+        // Получаем элементы DOM
+        const authTabs = document.getElementById("auth-tabs");
+        const loggedInMessage = document.getElementById("logged-in-message");
+        const userEmailDisplay = document.getElementById("user-email-display");
+
+        // Элементы ВХОДА
+        const loginForm = document.getElementById("login-form"); // <--- НОВЫЙ ЭЛЕМЕНТ
+        const usernameLoginInput = document.getElementById(
+          "username-login-input"
+        );
+        const passwordInput = document.getElementById("password-input");
+        const googleLoginButton = document.getElementById(
+          "google-login-button"
+        );
+        const forgotPasswordLink = document.getElementById(
+          "forgot-password-link"
+        );
+
+        // Элементы РЕГИСТРАЦИИ
+        const signupForm = document.getElementById("signup-form"); // <--- ДОБАВЛЕНО
+        const signupEmailInput = document.getElementById("signup-email-input");
+        const signupUsernameInput = document.getElementById(
+          "signup-username-input"
+        );
+        const signupPasswordInput = document.getElementById(
+          "signup-password-input"
+        );
+        const signupButton = document.getElementById("signup-button");
+
+        const logoutButton = document.getElementById("logout-button");
+        const authStatus = document.getElementById("auth-status");
+
+        document.getElementById("loading-status").innerHTML =
+          '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Перевірка статусу авторизації...</span>';
+
+        // 1. Отслеживание статуса пользователя
+        auth.onAuthStateChanged((user) => {
+          document.getElementById("loading-status").style.display = "none";
+
+          if (user) {
+            // Пользователь вошел в систему
+            userEmailDisplay.textContent = user.email;
+            authTabs.style.display = "none";
+            loggedInMessage.style.display = "block";
+
+            // Перенаправление на главную страницу через 3 секунды
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 3000);
+          } else {
+            // Пользователь вышел из системы или не вошел
+            authTabs.style.display = "block";
+            loggedInMessage.style.display = "none";
+            switchTab("login");
+          }
+        });
+
+        // 2. Обработчик регистрации (Email + Username + Пароль)
+        signupForm.addEventListener("submit", async (e) => {
+          // <--- ИЗМЕНЕНО: Обработчик SUBMIT на ФОРМЕ
+          e.preventDefault(); // <--- ВАЖНО: Останавливаем перезагрузку страницы
+          const email = signupEmailInput.value;
+          const username = signupUsernameInput.value;
+          const password = signupPasswordInput.value;
+
+          authStatus.style.display = "block";
+          authStatus.innerHTML =
+            '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Реєстрація...</span>';
+
+          try {
+            if (!username || username.trim() === "") {
+              throw {
+                code: "auth/missing-username",
+                message: "⚠️ Будь ласка, введіть ім'я користувача.",
+              };
+            }
+
+            const isUnique = await checkUsernameUnique(username);
+            if (!isUnique) {
+              throw {
+                code: "auth/username-already-in-use",
+                message:
+                  "⚠️ Користувач з таким логіном вже існує (без врахування регістру).",
+              };
+            }
+
+            const userCredential = await auth.createUserWithEmailAndPassword(
+              email,
+              password
+            );
+            const user = userCredential.user;
+            await saveUserData(userCredential.user, username);
+
+            // НОВОЕ: Отправка письма для верификации
+            await user.sendEmailVerification();
+
+            // ИЗМЕНЕНО: Новое сообщение об успехе с инструкцией по верификации
+            authStatus.innerHTML =
+              "✅ Реєстрація успішна! Перевірте Вашу пошту для активації облікового запису.";
+            signupEmailInput.value = "";
+            signupUsernameInput.value = "";
+            signupPasswordInput.value = "";
+
+            // Даем 2 секунды на прочтение и переключаем
+            setTimeout(() => {
+              switchTab("login");
+            }, 2000);
+          } catch (error) {
+            let errorMessage = "Помилка: " + error.message;
+
+            if (error.code === "auth/username-already-in-use") {
+              errorMessage = error.message;
+            } else if (error.code === "auth/missing-username") {
+              errorMessage = error.message;
+            } else if (error.code === "auth/missing-password") {
+              errorMessage = "⚠️ Будь ласка, введіть пароль.";
+            } else if (error.code === "auth/invalid-email") {
+              errorMessage =
+                "⚠️ Будь ласка, введіть коректний формат email (наприклад, user@domain.com).";
+            } else if (error.code === "auth/weak-password") {
+              errorMessage = "⚠️ Пароль має бути не менше 6 символів.";
+            } else if (error.code === "auth/email-already-in-use") {
+              errorMessage = "⚠️ Користувач з цією поштою вже існує.";
+            }
+            authStatus.innerHTML = `<p style="color: var(--status-error);">${errorMessage}</p>`;
+            console.error("Signup error:", error);
+          }
+        });
+
+        // 3. Обработчик входа (Username + Пароль)
+        loginForm.addEventListener("submit", async (e) => {
+          // <-- ИЗМЕНЕНО: Обработчик SUBMIT на ФОРМЕ
+          // ВАЖНО: Останавливаем стандартную отправку формы (перезагрузку страницы)
+          e.preventDefault();
+
+          const username = usernameLoginInput.value;
+          const password = passwordInput.value;
+
+          authStatus.style.display = "block";
+          authStatus.innerHTML =
+            '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Вхід...</span>';
+
+          try {
+            const usernameInput = usernameLoginInput.value; // Берем значение из поля (например, 'egolf')
+
+            // 1. Ищем email (логика без учета регистра)
+            const email = await findEmailByUsername(usernameInput);
+
+            if (!email) {
+              throw {
+                code: "auth/user-not-found",
+                message: "Користувач не знайдений",
+              };
+            }
+
+            // 2. Вход
+            const userCredential = await auth.signInWithEmailAndPassword(
+              email,
+              password
+            );
+            const user = userCredential.user;
+
+            // 3. НОВОЕ: Загружаем оригинальный username (с регистром) из Firestore
+            const userDoc = await db.collection("users").doc(user.uid).get();
+            let originalUsername = null;
+
+            if (userDoc.exists) {
+              originalUsername = userDoc.data().username; // Получаем 'eGolf'
+            }
+
+            // 4. Обновление данных (только lastSignInTime).
+            // Если originalUsername найден, мы передаем его, чтобы он не был перезаписан нижним регистром.
+            // Если его нет (хотя не должно быть), мы используем значение из поля ввода для страховки.
+            await saveUserData(user, originalUsername || usernameInput);
+          } catch (error) {
+            let errorMessage = "Помилка: " + error.message;
+
+            if (
+              error.code === "auth/invalid-login-credentials" ||
+              error.code === "auth/user-not-found" ||
+              error.code === "auth/wrong-password" ||
+              errorMessage.includes("Користувач не знайдений")
+            ) {
+              errorMessage = "⚠️ Невірний логін або пароль.";
+            } else if (error.code === "auth/missing-password") {
+              errorMessage = "⚠️ Будь ласка, введіть пароль.";
+            } else if (error.code === "permission-denied") {
+              errorMessage =
+                "⚠️ Помилка доступу до бази даних. Перевірте Правила Firebase Firestore.";
+            }
+
+            authStatus.innerHTML = `<p style="color: var(--status-error);">${errorMessage}</p>`;
+            console.error("Login error:", error);
+          }
+        });
+
+        // 5. Логика входу через Google
+        googleLoginButton.addEventListener("click", async () => {
+          authStatus.style.display = "block";
+          authStatus.innerHTML =
+            '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Вхід через Google...</span>';
+
+          const provider = new firebase.auth.GoogleAuthProvider();
+
+          try {
+            const userCredential = await auth.signInWithPopup(provider);
+
+            await saveUserData(userCredential.user);
+          } catch (error) {
+            let errorMessage = "Помилка входу через Google.";
+
+            if (error.code === "auth/popup-closed-by-user") {
+              errorMessage = "⚠️ Вікно авторизації було закрито користувачем.";
+            } else if (error.code === "auth/cancelled-popup-request") {
+              errorMessage = "⚠️ Запит на вхід було скасовано.";
             } else {
-                console.warn("Native Android closeApp interface not found. Cannot close application.");
-            }
-        }
-        
-        async function handleLogout() {
-            try {
-                await auth.signOut();
-                console.log("Успешный выход из Firebase.");
-            } catch (error) {
-                console.error("Ошибка при выходе из Firebase:", error);
-                alert("Помилка виходу: " + error.message);
-            }
-        }
-
-        function handleExit() {
-            handleLogout(); 
-        }
-        
-        // --- НОВАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ЗАКЛАДОК ---
-        function switchTab(tabName) {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-
-            tabButtons.forEach(button => {
-                button.classList.remove('active');
-                if (button.textContent.trim().toLowerCase().includes(tabName.toLowerCase())) {
-                    button.classList.add('active');
-                }
-            });
-
-            tabContents.forEach(content => {
-                content.classList.remove('active');
-                if (content.id === `${tabName}-tab-content`) {
-                    content.classList.add('active');
-                }
-            });
-            
-            document.getElementById('auth-status').style.display = 'none';
-        }
-		
-		function togglePasswordVisibility(targetId, toggleElement) {
-			const input = document.getElementById(targetId);
-			
-			// Переключаем атрибут type
-			if (input.type === 'password') {
-				input.type = 'text';
-				// Иконка: Глаз открыт
-				toggleElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-			} else {
-				input.type = 'password';
-				// Иконка: Глаз закрыт
-				toggleElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.48 0-8.21-3.2-9.67-8.12M4.24 4.24A10.07 10.07 0 0 1 12 4c4.48 0 8.21 3.2 9.67 8.12"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-			}
-		}
-
-
-        /* --- НОВЫЕ ФУНКЦИИ ДЛЯ USERNAME/EMAIL В FIRESTORE --- */
-
-        // 1.1 Поиск Email в Firestore по Username (для ВХОДА)
-        async function findEmailByUsername(username) {
-            const usersRef = db.collection('users');
-            const searchUsername = username.toLowerCase();
-            const snapshot = await usersRef.where('usernameLower', '==', searchUsername).limit(1).get();
-
-            if (snapshot.empty) {
-                return null; 
-            }
-            return snapshot.docs[0].data().email;
-        }
-		
-		// 1.2 Проверка уникальности usernameLower
-		async function checkUsernameUnique(username) {
-			const usersRef = db.collection('users');
-			
-			// Приводим входной username к нижнему регистру для поиска
-			const searchUsername = username.toLowerCase();
-			
-			// Ищем совпадения в поле usernameLower
-			const snapshot = await usersRef.where('usernameLower', '==', searchUsername).limit(1).get();
-
-			// Возвращаем true, если совпадений нет (уникален)
-			return snapshot.empty; 
-		}
-
-        // 2. ФУНКЦИЯ ДЛЯ ЗАПИСИ ДАННЫХ В FIRESTORE (ОБНОВЛЕНО ДЛЯ USERNAME)
-        async function saveUserData(user, username = null) {
-            if (!user) return;
-            const userRef = db.collection('users').doc(user.uid);
-            
-            const updateData = {
-                email: user.email,
-                lastSignInTime: firebase.firestore.FieldValue.serverTimestamp(),
-            };
-            
-            if (username) {
-                updateData.username = username; 
-				// ДОБАВЛЕНО: Сохраняем версию в нижнем регистре для поиска
-				updateData.usernameLower = username.toLowerCase();				
+              errorMessage = `Помилка: ${error.message}`;
             }
 
-            try {
-                if (user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime) {
-                    updateData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                }
-            } catch (e) {
-                updateData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            authStatus.innerHTML = `<p style="color: var(--status-error);">${errorMessage}</p>`;
+            console.error("Google Login error:", error);
+          }
+        });
+
+        // 6. Обработчик для кнопок показа/скрытия пароля
+        document.querySelectorAll(".toggle-password").forEach((toggle) => {
+          toggle.addEventListener("click", function () {
+            const targetId = this.dataset.target;
+            togglePasswordVisibility(targetId, this);
+          });
+        });
+
+        // 6. Обработчик ссылки "Забули пароль?"
+        forgotPasswordLink.addEventListener("click", async (e) => {
+          e.preventDefault();
+          const username = usernameLoginInput.value.trim();
+
+          authStatus.style.display = "block";
+          authStatus.innerHTML =
+            '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Пошук email та відправка інструкцій...</span>';
+
+          try {
+            if (!username) {
+              throw new Error(
+                "Будь ласка, введіть ім'я користувача (логін) для відновлення пароля."
+              );
             }
-            
-            await userRef.set(updateData, { merge: true })
-            .then(() => {
-                console.log("Данные пользователя успешно сохранены в Firestore.");
-            })
-            .catch((error) => {
-                console.error("Ошибка при записи данных пользователя в Firestore:", error);
-            });
-        }
-        
-        window.addEventListener('DOMContentLoaded', () => {
-            // Применяем тему
-            if (localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark');
-            }
-            
-            if (typeof auth === 'undefined') {
-                 document.getElementById('loading-status').innerHTML = '<p style="color: var(--status-error);">❌ Помилка: Firebase не підключений.</p>';
-                 return;
+
+            // 1. Находим email по username
+            const email = await findEmailByUsername(username);
+
+            if (!email) {
+              throw new Error("Користувач з таким логіном не знайдений.");
             }
 
-            // Получаем элементы DOM
-            const authTabs = document.getElementById('auth-tabs');
-            const loggedInMessage = document.getElementById('logged-in-message');
-            const userEmailDisplay = document.getElementById('user-email-display');
-            
-            // Элементы ВХОДА
-			const loginForm = document.getElementById('login-form'); // <--- НОВЫЙ ЭЛЕМЕНТ
-            const usernameLoginInput = document.getElementById('username-login-input'); 
-            const passwordInput = document.getElementById('password-input');
-            const googleLoginButton = document.getElementById('google-login-button');
-			const forgotPasswordLink = document.getElementById('forgot-password-link');
-            
-            // Элементы РЕГИСТРАЦИИ
-			const signupForm = document.getElementById('signup-form'); // <--- ДОБАВЛЕНО
-            const signupEmailInput = document.getElementById('signup-email-input');
-            const signupUsernameInput = document.getElementById('signup-username-input'); 
-            const signupPasswordInput = document.getElementById('signup-password-input');
-            const signupButton = document.getElementById('signup-button');
+            // 2. Отправляем письмо для сброса
+            await auth.sendPasswordResetEmail(email);
 
-            const logoutButton = document.getElementById('logout-button');
-            const authStatus = document.getElementById('auth-status');
-            
-            document.getElementById('loading-status').innerHTML = '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Перевірка статусу авторизації...</span>';
-            
-            
-            // 1. Отслеживание статуса пользователя
-            auth.onAuthStateChanged((user) => {
-                document.getElementById('loading-status').style.display = 'none';
+            authStatus.innerHTML = `<p style="color: var(--status-success);">✅ Інструкції для відновлення пароля відправлені на пошту: ${email}.</p>`;
+          } catch (error) {
+            let errorMessage = error.message || "Невідома помилка.";
 
-                if (user) {
-                    // Пользователь вошел в систему
-                    userEmailDisplay.textContent = user.email;
-                    authTabs.style.display = 'none'; 
-                    loggedInMessage.style.display = 'block';
-                    
-                    // Перенаправление на главную страницу через 3 секунды
-                    setTimeout(() => {
-                        window.location.href = 'index.html'; 
-                    }, 3000);
+            if (error.code === "auth/network-request-failed") {
+              errorMessage = "Помилка мережі. Перевірте з'єднання.";
+            }
+            // Специальная обработка для пользовательских ошибок
+            if (
+              errorMessage.includes("логіном не знайдений") ||
+              errorMessage.includes("введіть ім'я користувача")
+            ) {
+              // Оставляем пользовательское сообщение
+            } else {
+              // Иначе показываем общую ошибку Firebase
+              errorMessage = `Помилка: ${errorMessage}`;
+            }
 
-                } else {
-                    // Пользователь вышел из системы или не вошел
-                    authTabs.style.display = 'block'; 
-                    loggedInMessage.style.display = 'none';
-                    switchTab('login'); 
-                }
-            });
+            authStatus.innerHTML = `<p style="color: var(--status-error);">⚠️ ${errorMessage}</p>`;
+            console.error("Password Reset Error:", error);
+          }
+        });
 
-            // 2. Обработчик регистрации (Email + Username + Пароль)
-            signupForm.addEventListener('submit', async (e) => { // <--- ИЗМЕНЕНО: Обработчик SUBMIT на ФОРМЕ
-			e.preventDefault(); // <--- ВАЖНО: Останавливаем перезагрузку страницы
-                const email = signupEmailInput.value; 
-                const username = signupUsernameInput.value; 
-                const password = signupPasswordInput.value;
-
-                authStatus.style.display = 'block';
-                authStatus.innerHTML = '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Реєстрація...</span>';
-
-                try {
-                    if (!username || username.trim() === '') {
-                        throw { code: 'auth/missing-username', message: '⚠️ Будь ласка, введіть ім\'я користувача.' };
-                    }
-					
-                    const isUnique = await checkUsernameUnique(username);
-					if (!isUnique) {
-						throw { code: 'auth/username-already-in-use', message: '⚠️ Користувач з таким логіном вже існує (без врахування регістру).' };
-					}
-		
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-					const user = userCredential.user;
-                    await saveUserData(userCredential.user, username); 
-                    
-					// НОВОЕ: Отправка письма для верификации
-					await user.sendEmailVerification();
-					
-					// ИЗМЕНЕНО: Новое сообщение об успехе с инструкцией по верификации
-					authStatus.innerHTML = '✅ Реєстрація успішна! Перевірте Вашу пошту для активації облікового запису.';
-                    signupEmailInput.value = '';
-                    signupUsernameInput.value = '';
-                    signupPasswordInput.value = '';
-                    
-                    // Даем 2 секунды на прочтение и переключаем
-                    setTimeout(() => {
-                        switchTab('login');
-                    }, 2000); 
-
-                } catch (error) {
-                    let errorMessage = 'Помилка: ' + error.message;
-                    
-                  if (error.code === 'auth/username-already-in-use') {
-					errorMessage = error.message;
-				} else if (error.code === 'auth/missing-username') { 
-					errorMessage = error.message;
-				} else if (error.code === 'auth/missing-password') {
-					errorMessage = '⚠️ Будь ласка, введіть пароль.';
-				} else if (error.code === 'auth/invalid-email') {
-					errorMessage = '⚠️ Будь ласка, введіть коректний формат email (наприклад, user@domain.com).';
-				} else if (error.code === 'auth/weak-password') {
-					errorMessage = '⚠️ Пароль має бути не менше 6 символів.';
-				} else if (error.code === 'auth/email-already-in-use') {
-					errorMessage = '⚠️ Користувач з цією поштою вже існує.';
-				}
-				authStatus.innerHTML = `<p style="color: var(--status-error);">${errorMessage}</p>`;
-				console.error('Signup error:', error);
-                }
-            });
-
-            // 3. Обработчик входа (Username + Пароль)
-			loginForm.addEventListener('submit', async (e) => { // <-- ИЗМЕНЕНО: Обработчик SUBMIT на ФОРМЕ
-				// ВАЖНО: Останавливаем стандартную отправку формы (перезагрузку страницы)
-				e.preventDefault(); 
-				
-				const username = usernameLoginInput.value; 
-				const password = passwordInput.value;
-
-				authStatus.style.display = 'block';
-				authStatus.innerHTML = '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Вхід...</span>';
-
-				try {
-					const usernameInput = usernameLoginInput.value; // Берем значение из поля (например, 'egolf')
-					
-					// 1. Ищем email (логика без учета регистра)
-					const email = await findEmailByUsername(usernameInput);
-
-					if (!email) {
-						throw { code: 'auth/user-not-found', message: 'Користувач не знайдений' };
-					}
-					
-					// 2. Вход
-					const userCredential = await auth.signInWithEmailAndPassword(email, password);
-					const user = userCredential.user;
-
-					// 3. НОВОЕ: Загружаем оригинальный username (с регистром) из Firestore
-					const userDoc = await db.collection('users').doc(user.uid).get();
-					let originalUsername = null;
-
-					if (userDoc.exists) {
-						originalUsername = userDoc.data().username; // Получаем 'eGolf'
-					}
-
-					// 4. Обновление данных (только lastSignInTime). 
-					// Если originalUsername найден, мы передаем его, чтобы он не был перезаписан нижним регистром.
-					// Если его нет (хотя не должно быть), мы используем значение из поля ввода для страховки.
-					await saveUserData(user, originalUsername || usernameInput);	
-
-				} catch (error) {
-					let errorMessage = 'Помилка: ' + error.message;
-					
-					if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || errorMessage.includes('Користувач не знайдений')) {
-						errorMessage = '⚠️ Невірний логін або пароль.';
-					} else if (error.code === 'auth/missing-password') { 
-						errorMessage = '⚠️ Будь ласка, введіть пароль.';
-					} else if (error.code === 'permission-denied') {
-						errorMessage = '⚠️ Помилка доступу до бази даних. Перевірте Правила Firebase Firestore.';
-					}
-					
-					authStatus.innerHTML = `<p style="color: var(--status-error);">${errorMessage}</p>`;
-					console.error('Login error:', error);
-				}
-			});
-            
-            // 4. Обработчик кнопки "Вийти"
-            logoutButton.addEventListener('click', handleLogout);
-			
-			// 5. Логика входу через Google
-            googleLoginButton.addEventListener('click', async () => {
-                
-                authStatus.style.display = 'block';
-                authStatus.innerHTML = '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Вхід через Google...</span>';
-                
-                const provider = new firebase.auth.GoogleAuthProvider();
-
-                try {
-                    const userCredential = await auth.signInWithPopup(provider);
-                    
-                    await saveUserData(userCredential.user);
-                    
-                } catch (error) {
-                    let errorMessage = 'Помилка входу через Google.';
-
-                    if (error.code === 'auth/popup-closed-by-user') {
-                        errorMessage = '⚠️ Вікно авторизації було закрито користувачем.';
-                    } else if (error.code === 'auth/cancelled-popup-request') {
-                        errorMessage = '⚠️ Запит на вхід було скасовано.';
-                    } else {
-                        errorMessage = `Помилка: ${error.message}`;
-                    }
-
-                    authStatus.innerHTML = `<p style="color: var(--status-error);">${errorMessage}</p>`;
-                    console.error('Google Login error:', error);              
-				}
-            });
-			
-			// 6. Обработчик для кнопок показа/скрытия пароля
-			document.querySelectorAll('.toggle-password').forEach(toggle => {
-				toggle.addEventListener('click', function() {
-					const targetId = this.dataset.target;
-					togglePasswordVisibility(targetId, this);
-				});
-			});
-			
-			// 6. Обработчик ссылки "Забули пароль?"
-				forgotPasswordLink.addEventListener('click', async (e) => {
-				e.preventDefault();
-				const username = usernameLoginInput.value.trim();
-
-				authStatus.style.display = 'block';
-				authStatus.innerHTML = '<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Пошук email та відправка інструкцій...</span>';
-
-				try {
-					if (!username) {
-						throw new Error('Будь ласка, введіть ім\'я користувача (логін) для відновлення пароля.');
-					}
-
-					// 1. Находим email по username
-					const email = await findEmailByUsername(username);
-
-					if (!email) {
-						throw new Error('Користувач з таким логіном не знайдений.');
-					}
-
-					// 2. Отправляем письмо для сброса
-					await auth.sendPasswordResetEmail(email);
-
-					authStatus.innerHTML = `<p style="color: var(--status-success);">✅ Інструкції для відновлення пароля відправлені на пошту: ${email}.</p>`;
-					
-				} catch (error) {
-					let errorMessage = error.message || 'Невідома помилка.';
-					
-					if (error.code === 'auth/network-request-failed') {
-						 errorMessage = 'Помилка мережі. Перевірте з\'єднання.';
-					}
-					// Специальная обработка для пользовательских ошибок
-					if (errorMessage.includes('логіном не знайдений') || errorMessage.includes('введіть ім\'я користувача')) {
-						// Оставляем пользовательское сообщение
-					} else {
-						 // Иначе показываем общую ошибку Firebase
-						 errorMessage = `Помилка: ${errorMessage}`;
-					}
-
-					authStatus.innerHTML = `<p style="color: var(--status-error);">⚠️ ${errorMessage}</p>`;
-					console.error('Password Reset Error:', error);
-				}
-			});
-			
-		    document.getElementById('buildVersion').textContent = BUILD_VERSION; 	
-		});
-		
-
+        document.getElementById("buildVersion").textContent = BUILD_VERSION;
+      });
     </script>
-</body>
+  </body>
 </html>

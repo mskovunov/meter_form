@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Моніторинг Енергії</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="emonitor.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-N0T0138X0Q"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-N0T0138X0Q");
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <button class="menu-button" onclick="toggleMenu()">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M4 6H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M4 12H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M4 18H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+
+      <div id="user-info-header">
+        <div id="user-info-wrapper" onclick="showUserProfile()">
+          <span id="user-email-display" title="Ваш користувач"></span>
+        </div>
+        <button
+          id="logout-inline-button"
+          onclick="handleLogout()"
+          title="Вийти з облікового запису"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="form-wrapper">
+        <div id="sidebar-placeholder"></div>
+
+        <h2>Моніторинг Енергомережі</h2>
+        <p
+          id="admin-status"
+          style="text-align: center; margin-bottom: 10px; height: 20px"
+        ></p>
+
+        <div id="monitoring-section" style="display: none">
+          <div class="dashboard-wrapper">
+            <div
+              class="info-card"
+              id="card-voltage"
+              onclick="setChartMode('voltage')"
+              style="color: #ff9800"
+            >
+              <h3>Напруга</h3>
+              <div class="value" style="color: inherit">
+                <span id="disp-voltage">--</span><span class="unit">V</span>
+              </div>
+            </div>
+
+            <div
+              class="info-card active-card"
+              id="card-power"
+              onclick="setChartMode('power')"
+              style="color: #007bff"
+            >
+              <h3>Потужність</h3>
+              <div class="value" style="color: inherit">
+                <span id="disp-power">--</span><span class="unit">W</span>
+              </div>
+            </div>
+
+            <div
+              class="info-card"
+              id="card-energy"
+              onclick="setChartMode('energy')"
+              style="color: #6f42c1"
+            >
+              <h3>Лічильник (Total)</h3>
+              <div class="value" style="color: inherit">
+                <span id="disp-energy">--</span><span class="unit">kWh</span>
+              </div>
+            </div>
+
+            <div
+              class="info-card"
+              id="card-daily"
+              onclick="setChartMode('daily')"
+              style="color: #28a745"
+            >
+              <h3>Сьогодні</h3>
+              <div class="value" style="color: inherit">
+                <span id="disp-daily">--</span><span class="unit">kWh</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="range-selector">
+            <button class="range-btn active" onclick="changeRange(250, this)">
+              1 год
+            </button>
+            <button class="range-btn" onclick="changeRange(750, this)">
+              3 год
+            </button>
+            <button class="range-btn" onclick="changeRange(1500, this)">
+              6 год
+            </button>
+            <button class="range-btn" onclick="changeRange(3000, this)">
+              12 год
+            </button>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="powerChart"></canvas>
+            <button class="reset-zoom-btn" onclick="powerChart.resetZoom()">
+              ⟲ Zoom
+            </button>
+          </div>
+
+          <h3 class="logs-title">Журнал подій (System Logs)</h3>
+          <div class="logs-container">
+            <table id="logs-table">
+              <thead>
+                <tr>
+                  <th>Час</th>
+                  <th>Подія</th>
+                  <th>Причина</th>
+                </tr>
+              </thead>
+              <tbody id="logs-body">
+                <tr>
+                  <td
+                    colspan="3"
+                    style="text-align: center; padding: 15px; opacity: 0.7"
+                  >
+                    Завантаження...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <p
+          id="buildVersion"
+          style="
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #999;
+            text-align: center;
+          "
+        ></p>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="./firebase-init.js"></script>
+    <script src="utils.js"></script>
+
+    <script>
+      let isAdmin = false;
+      let powerChart = null;
+      let currentMode = "power";
+      let todayStartEnergy = null;
+      let unsubscribeMeter = null;
+      let currentLimit = 250;
+
+      let cachedData = {
+        labels: [],
+        power: [],
+        voltage: [],
+        energy: [],
+        dailyEnergyProfile: [],
+      };
+
+      const chartColors = {
+        power: { color: "rgb(0, 123, 255)", bg: "rgba(0, 123, 255, 0.1)" },
+        voltage: { color: "rgb(255, 152, 0)", bg: "rgba(255, 152, 0, 0.1)" },
+        energy: { color: "rgb(111, 66, 193)", bg: "rgba(111, 66, 193, 0.1)" },
+        daily: { color: "rgb(40, 167, 69)", bg: "rgba(40, 167, 69, 0.1)" },
+      };
+
+      window.changeRange = function (limit, btn) {
+        document
+          .querySelectorAll(".range-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentLimit = limit;
+
+        if (unsubscribeMeter) {
+          unsubscribeMeter();
+          unsubscribeMeter = null;
+        }
+        startMeterListener();
+        if (powerChart) powerChart.resetZoom();
+      };
+
+      window.setChartMode = function (mode) {
+        currentMode = mode;
+        document
+          .querySelectorAll(".info-card")
+          .forEach((el) => el.classList.remove("active-card"));
+        document.getElementById(`card-${mode}`).classList.add("active-card");
+        updateChartData();
+      };
+
+      function updateChartData() {
+        if (!powerChart) return;
+
+        const colors = chartColors[currentMode];
+        let labelText = "";
+        const todayStr = new Date().toLocaleDateString("uk-UA");
+
+        switch (currentMode) {
+          case "power":
+            labelText = "Потужність (W)";
+            break;
+          case "voltage":
+            labelText = "Напруга (V)";
+            break;
+          case "energy":
+            labelText = "Всього накопичено (Total kWh)";
+            break;
+          case "daily":
+            labelText = `Споживання за ${todayStr} (kWh)`;
+            break;
+        }
+
+        powerChart.data.datasets[0].label = labelText;
+        powerChart.data.datasets[0].borderColor = colors.color;
+        powerChart.data.datasets[0].backgroundColor = colors.bg;
+
+        if (currentMode === "daily") {
+          powerChart.data.datasets[0].data = cachedData.dailyEnergyProfile;
+        } else {
+          powerChart.data.datasets[0].data = cachedData[currentMode];
+        }
+
+        if (currentMode === "voltage" || currentMode === "energy") {
+          powerChart.options.scales.y.beginAtZero = false;
+        } else {
+          powerChart.options.scales.y.beginAtZero = true;
+        }
+
+        powerChart.data.labels = cachedData.labels;
+        powerChart.update();
+      }
+
+      function fetchTodayStartEnergy() {
+        const now = new Date();
+        const dateString =
+          now.getFullYear() +
+          "-" +
+          String(now.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(now.getDate()).padStart(2, "0");
+        const startOfDayStr = dateString + " 00:00:00";
+
+        db.collection("meter_readings")
+          .where("created_at", ">=", startOfDayStr)
+          .orderBy("created_at", "asc")
+          .limit(1)
+          .get()
+          .then((snapshot) => {
+            if (!snapshot.empty) {
+              todayStartEnergy = snapshot.docs[0].data().energy;
+            } else {
+              todayStartEnergy = null;
+            }
+          })
+          .catch((error) => console.error("Index Error:", error));
+      }
+
+      function startMeterListener() {
+        console.log("Subscribing with limit:", currentLimit);
+        unsubscribeMeter = db
+          .collection("meter_readings")
+          .orderBy("created_at", "desc")
+          .limit(currentLimit)
+          .onSnapshot(
+            (snapshot) => {
+              const temps = {
+                labels: [],
+                power: [],
+                voltage: [],
+                energy: [],
+                dailyEnergyProfile: [],
+              };
+              let latestDoc = null;
+
+              snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (!latestDoc) latestDoc = data;
+                const fullTime = data.created_at
+                  ? data.created_at.split(" ")[1]
+                  : "";
+                const shortTime = fullTime.substring(0, 5);
+
+                temps.labels.push(shortTime);
+                temps.power.push(data.power);
+                temps.voltage.push(data.voltage);
+                temps.energy.push(data.energy);
+
+                if (todayStartEnergy !== null) {
+                  let val = data.energy - todayStartEnergy;
+                  if (val < 0) val = 0;
+                  temps.dailyEnergyProfile.push(val.toFixed(4));
+                } else {
+                  temps.dailyEnergyProfile.push(0);
+                }
+              });
+
+              window.lastDataTime = new Date();
+              cachedData.labels = temps.labels.reverse();
+              cachedData.power = temps.power.reverse();
+              cachedData.voltage = temps.voltage.reverse();
+              cachedData.energy = temps.energy.reverse();
+              cachedData.dailyEnergyProfile =
+                temps.dailyEnergyProfile.reverse();
+
+              if (latestDoc) {
+                document.getElementById("disp-voltage").innerText =
+                  latestDoc.voltage;
+                document.getElementById("disp-power").innerText =
+                  latestDoc.power;
+                document.getElementById("disp-energy").innerText =
+                  latestDoc.energy;
+
+                if (todayStartEnergy !== null) {
+                  let daily = (latestDoc.energy - todayStartEnergy).toFixed(3);
+                  if (daily < 0) daily = "0.000";
+                  document.getElementById("disp-daily").innerText = daily;
+                } else {
+                  document.getElementById("disp-daily").innerText = "...";
+                  if (!todayStartEnergy) fetchTodayStartEnergy();
+                }
+              }
+              updateChartData();
+            },
+            (error) => {
+              console.error("Error readings:", error);
+            }
+          );
+      }
+
+      function initPowerMonitor() {
+        const ctx = document.getElementById("powerChart").getContext("2d");
+        const isDark = document.body.classList.contains("dark");
+        const gridColor = isDark ? "#444" : "#eee";
+        const textColor = isDark ? "#ccc" : "#666";
+
+        powerChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Завантаження...",
+                data: [],
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: "index" },
+            plugins: {
+              legend: { labels: { color: textColor } },
+              zoom: {
+                pan: { enabled: true, mode: "x" },
+                zoom: {
+                  wheel: { enabled: true },
+                  pinch: { enabled: true },
+                  mode: "x",
+                },
+              },
+            },
+            scales: {
+              x: { ticks: { color: textColor }, grid: { display: false } },
+              y: {
+                beginAtZero: true,
+                ticks: { color: textColor },
+                grid: { color: gridColor },
+              },
+            },
+            animation: { duration: 0 },
+          },
+        });
+
+        setInterval(() => {
+          const statusEl = document.getElementById("admin-status");
+          if (window.lastDataTime) {
+            const diffSeconds = (new Date() - window.lastDataTime) / 1000;
+            if (diffSeconds > 35) {
+              statusEl.innerHTML =
+                '<span style="color:red; font-weight:bold;">⚠️ OFFLINE</span>';
+              document.querySelector(".dashboard-wrapper").style.opacity =
+                "0.5";
+            } else {
+              statusEl.innerHTML =
+                '<span style="color:#28a745;">● ONLINE</span>';
+              document.querySelector(".dashboard-wrapper").style.opacity = "1";
+            }
+          }
+        }, 5000);
+
+        fetchTodayStartEnergy();
+        startMeterListener();
+
+        db.collection("system_logs")
+          .orderBy("created_at", "desc")
+          .limit(10)
+          .onSnapshot((snapshot) => {
+            const tbody = document.getElementById("logs-body");
+            tbody.innerHTML = "";
+            if (snapshot.empty) {
+              tbody.innerHTML =
+                "<tr><td colspan='3' style='text-align:center; padding:15px; opacity:0.5;'>Журнал порожній</td></tr>";
+              return;
+            }
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              let dateStr = data.created_at || "---";
+              let reasonColor = "inherit";
+              let reasonWeight = "normal";
+              const r = data.reason || "";
+              if (r.includes("Power ON")) {
+                reasonColor = "#28a745";
+                reasonWeight = "bold";
+              }
+              if (r.includes("Watchdog") || r.includes("Reset")) {
+                reasonColor = "#dc3545";
+                reasonWeight = "bold";
+              }
+              if (r.includes("Brownout")) {
+                reasonColor = "#fd7e14";
+                reasonWeight = "bold";
+              }
+              const row = `<tr>
+                    <td style="font-family: monospace; opacity: 0.8;">${dateStr}</td>
+                    <td style="font-weight: 500;">${data.message || "---"}</td>
+                    <td style="color: ${reasonColor}; font-weight: ${reasonWeight};">${r}</td>
+                </tr>`;
+              tbody.innerHTML += row;
+            });
+          });
+      }
+
+      // НОВАЯ ФУНКЦИЯ: Заглушка для клика по имени пользователя
+      function showUserProfile() {
+        //alert("Переход в профиль пользователя (заглушка)");
+        console.log("Clicked on user profile link.");
+      }
+
+      window.addEventListener("DOMContentLoaded", async () => {
+        if (localStorage.getItem("theme") === "dark")
+          document.body.classList.add("dark");
+        await loadComponent("sidebar-placeholder", "sidebar.html");
+        if (typeof BUILD_VERSION !== "undefined")
+          document.getElementById("buildVersion").textContent = BUILD_VERSION;
+        auth.onAuthStateChanged((user) => {
+          if (user && db) {
+            checkAdminStatus(user);
+          } else {
+            window.location.replace("auth.html");
+          }
+        });
+      });
+
+      async function checkAdminStatus(user) {
+        const userRef = db.collection("users").doc(user.uid);
+        try {
+          const doc = await userRef.get();
+          if (doc.exists && doc.data().role === "admin") {
+            isAdmin = true;
+            document.getElementById("monitoring-section").style.display =
+              "block";
+
+            // === ДОБАВЛЕНО: Отображаем email/имя в шапке ===
+            const username = doc.data().username || user.email;
+            document.getElementById("user-email-display").textContent =
+              username;
+            // ==============================================
+
+            // Показываем пункты меню
+            const adminMenuItem = document.getElementById("admin-menu-item");
+            if (adminMenuItem) adminMenuItem.style.display = "block";
+
+            initPowerMonitor();
+          } else {
+            window.location.replace("index.html");
+          }
+        } catch (error) {
+          window.location.replace("index.html");
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -718,9 +718,6 @@ label {
             transition: max-height 0.3s ease-out, padding 0.3s ease-out;
 
         }
-        .accordion-content.open {
-
-        }
 		
 		        /* НОВЫЙ СТИЛЬ: Аккордеон как Кнопка (для index.html) */
         .accordion-item.button-like {

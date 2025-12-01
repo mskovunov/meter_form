@@ -18,5 +18,4 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
   
-
 console.log("✅ Firebase (Auth и Firestore) успешно подключен.");

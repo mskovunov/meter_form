@@ -1,43 +1,232 @@
 <!DOCTYPE html>
 <html lang="uk">
-<head>
-  <meta charset="UTF-8">
-  <title>Середня ціна зарядки в Києві</title>
-</head>
-<body>
-  <h2>Середня вартість зарядки електромобіля в Києві</h2>
-  <div id="results">Завантаження...</div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Адмін-панель</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
 
-  <script>
-    const apiKey = "f3e4af9b-7a82-4d3d-8ab3-5e48444c1eff";
-    const url = `https://api.openchargemap.io/v3/poi/?output=json&countrycode=UA&latitude=50.4501&longitude=30.5234&distance=20&maxresults=100&compact=true&verbose=false&key=${apiKey}`;
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-N0T0138X0Q"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        const dcPrices = [];
-        const acPrices = [];
+      gtag("config", "G-N0T0138X0Q");
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <button class="menu-button" onclick="toggleMenu()">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M4 6H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M4 12H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M4 18H20"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
 
-        data.forEach(station => {
-          const usageCost = station.UsageCost || "";
-          const dcMatch = usageCost.match(/DC\s*-\s*(\d+(\.\d+)?)\s*UAH/);
-          const acMatch = usageCost.match(/AC\s*-\s*(\d+(\.\d+)?)\s*UAH/);
+      <div class="form-wrapper">
+        <!-- Боковое меню зачитываем из utils.js-->
+        <div id="sidebar-placeholder"></div>
 
-          if (dcMatch) dcPrices.push(parseFloat(dcMatch[1]));
-          if (acMatch) acPrices.push(parseFloat(acMatch[1]));
+        <h2>Панель адміністратора</h2>
+
+        <p
+          id="admin-status"
+          style="text-align: center; margin-bottom: 20px"
+        ></p>
+
+        <div id="log-table-container"></div>
+
+        <p
+          id="buildVersion"
+          style="
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #999;
+            text-align: center;
+          "
+        ></p>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="./firebase-init.js"></script>
+    <script src="utils.js"></script>
+
+    <script>
+      // Глобальная переменная для отслеживания статуса
+      let isAdmin = false;
+
+      // --- ФУНКЦИИ АДМИНИСТРАТОРА ---
+
+      async function checkAdminStatus(user) {
+        if (!user || typeof db === "undefined") {
+          window.location.replace("auth.html"); // Не авторизован
+          return;
+        }
+
+        const userRef = db.collection("users").doc(user.uid);
+        try {
+          const doc = await userRef.get();
+          const data = doc.data();
+
+          if (doc.exists && data.role === "admin") {
+            isAdmin = true;
+            // Администратор, загружаем логи
+            loadPortLogs();
+          } else {
+            alert(
+              "Доступ заборонено. Тільки адміністратори можуть переглядати цю сторінку."
+            );
+            window.location.replace("index.html"); // Перенаправляем обратно
+          }
+        } catch (error) {
+          console.error("Ошибка проверки роли администратора:", error);
+          alert("Ошибка доступа.");
+          window.location.replace("index.html");
+        }
+      }
+
+      // --- ЗАГРУЗКА И РЕНДЕРИНГ ЛОГОВ ---
+
+      async function loadPortLogs() {
+        const logDiv = document.getElementById("log-table-container");
+        const statusDiv = document.getElementById("admin-status");
+
+        // Показываем спиннер
+        statusDiv.innerHTML = `<span class="inline-spinner-wrapper"><span class="inline-spinner"></span> Завантаження логів порту...</span>`;
+        statusDiv.style.display = "block";
+
+        try {
+          // Получаем логи, сортируем по времени (новые сверху)
+          const logsRef = db.collection("port_logs");
+          const snapshot = await logsRef
+            .orderBy("timestamp", "desc")
+            .limit(200)
+            .get(); // Ограничение в 200 логов
+
+          statusDiv.style.display = "none";
+
+          if (snapshot.empty) {
+            logDiv.innerHTML =
+              '<p style="text-align: center;">Логи перемикання порту не знайдено.</p>';
+          } else {
+            const logData = snapshot.docs.map((doc) => doc.data());
+            renderLogTable(logData, logDiv);
+          }
+        } catch (error) {
+          console.error("Ошибка загрузки логов:", error);
+          statusDiv.innerHTML = `<p style="color: var(--status-error);">⚠️ Помилка завантаження логів. Перевірте Правила Firestore.</p>`;
+        }
+      }
+
+      function renderLogTable(data, container) {
+        let html = `
+            <div class="table-scroll">
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th>Час (місцевий)</th>
+                            <th>Користувач (логін)</th>
+                            <th class="status-col">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        data.forEach((row) => {
+          // Используем сохраненное локальное время или конвертируем серверный timestamp
+          const timeValue = row.timestamp ? row.timestamp.toDate() : new Date();
+          const localTimeString =
+            row.localTime ||
+            timeValue
+              .toLocaleDateString("uk-UA", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false,
+              })
+              .replace(",", "");
+
+          const statusUA =
+            row.statusUA || (row.status === "busy" ? "Зайнятий" : "Доступний");
+          // Используем классы из style.css
+          const statusClass = row.status === "busy" ? "inactive" : "active";
+          const statusIcon = row.status === "busy" ? "🔴" : "🟢";
+
+          html += `
+                <tr class="row-${statusClass}">
+                    <td>${localTimeString}</td>
+                    <td>${
+                      row.username || row.email || row.userId || "Невідомий"
+                    }</td>
+                    <td class="status-col">
+                        <span class="status-indicator status-${statusClass}">
+                            ${statusIcon} ${statusUA}
+                        </span>
+                    </td>
+                </tr>
+            `;
         });
 
-        const average = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : "немає даних";
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+      }
 
-        document.getElementById("results").innerHTML = `
-          <p><strong>DC зарядка:</strong> ${average(dcPrices)} грн/кВт⋅ч</p>
-          <p><strong>AC зарядка:</strong> ${average(acPrices)} грн/кВт⋅ч</p>
-        `;
-      })
-      .catch(error => {
-        console.error("Помилка при отриманні даних:", error);
-        document.getElementById("results").innerText = "Не вдалося завантажити дані.";
+      // --- Инициализация ---
+      window.addEventListener("DOMContentLoaded", async () => {
+        // Загрузка темы
+        if (localStorage.getItem("theme") === "dark") {
+          document.body.classList.add("dark");
+        }
+        await loadComponent("sidebar-placeholder", "sidebar.html");
+        document.getElementById("buildVersion").textContent = BUILD_VERSION;
+
+        // Запускаем проверку авторизации и роли
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            checkAdminStatus(user);
+          } else {
+            window.location.replace("auth.html"); // Если не вошел, отправляем на логин
+          }
+        });
       });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
