@@ -15,20 +15,43 @@
     <script src="utils.js"></script>
 
     <script>
-      // Список месяцев, на основе Ваших данных за 2025 год
-      const MONTHS = [
-        { value: "2025-12", text: "Грудень 2025" },
-        { value: "2025-11", text: "Листопад 2025" },
-        { value: "2025-10", text: "Жовтень 2025" },
-        { value: "2025-09", text: "Вересень 2025" },
-        { value: "2025-08", text: "Серпень 2025" },
-        { value: "2025-07", text: "Липень 2025" },
-        { value: "2025-06", text: "Червень 2025" },
-        { value: "2025-05", text: "Травень 2025" },
-        { value: "2025-04", text: "Квітень 2025" },
-        { value: "2025-03", text: "Березень 2025" },
-        { value: "2025-02", text: "Лютий 2025" },
-      ];
+      // Функция генерации списка месяцев
+      function getMonthList() {
+        const monthNames = [
+          "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+          "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+        ];
+        
+        // НАСТРОЙКА: С какой даты начинать историю (Год, Месяц - 1)
+        // 1 = Февраль (так как отсчет с 0: Январь=0, Февраль=1)
+        const startDate = new Date(2025, 1, 1); 
+        
+        const currentDate = new Date();
+        // Сбрасываем день на 1-е число, чтобы избежать ошибок при перелистывании месяцев (например с 31-го числа)
+        currentDate.setDate(1); 
+        
+        const result = [];
+
+        // Цикл от текущей даты назад до startDate
+        while (currentDate >= startDate) {
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth();
+          
+          // Формируем value вида "2026-02"
+          const val = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+          // Формируем text вида "Лютий 2026"
+          const txt = `${monthNames[month]} ${year}`;
+          
+          result.push({ value: val, text: txt });
+
+          // Шаг назад на 1 месяц
+          currentDate.setMonth(currentDate.getMonth() - 1);
+        }
+        return result;
+      }
+
+      // Автоматически заполняем константу
+      const MONTHS = getMonthList();
 
       function populateMonthSelector() {
         const selector = document.getElementById("monthSelector");
