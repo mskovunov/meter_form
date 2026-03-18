@@ -168,33 +168,57 @@ function doPost(e) {
   
 
   // Если пришёл параметр для статуса порта — обновляем ячейку H1
-  if (e.parameter.portStatus !== undefined) {
+if (e.parameter.portStatus !== undefined) {
     const value = e.parameter.portStatus === "1" ? 1 : 0;
     sheet.getRange("H1").setValue(value);
-    
-    // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-    // --- ИЗМЕНЕНИЕ 4: ДОБАВЛЕНИЕ ЛОГИКИ ОТПРАВКИ E-MAIL ---
+
+    const now = new Date();
+    const formattedDateTime = Utilities.formatDate(
+        now, 
+        Session.getScriptTimeZone(), 
+        "dd.MM.yyyy HH:mm:ss" // Ваш желаемый формат
+    );
     const recipient = getRecipientList(); // Динамическое получение списка получателей
     const statusLabel = value === 1 ? "ЗАЙНЯТИЙ" : "ДОСТУПНИЙ";
-    
-    // Проверка, что список получателей не пуст
+
+    // 1)Отправка пуша в приложение (URL вашей развернутой Cloud Function)
+    const functionUrl = 'https://send-port-notification-1048555343427.europe-west1.run.app';
+    const payload = {
+        'status': statusLabel,
+        // НОВОЕ: Добавляем форматированную дату в payload
+        'timestamp': formattedDateTime
+    };
+    const options = {
+        'method': 'post',
+        'contentType': 'application/json',
+        'payload': JSON.stringify(payload),
+        'muteHttpExceptions': true // Важно, чтобы скрипт не падал при ошибке функции
+    };
+    try {
+        const response = UrlFetchApp.fetch(functionUrl, options);
+        Logger.log('Function response: ' + response.getContentText());
+    } catch (error) {
+        Logger.log("Помилка виклику Cloud Function: " + error.toString());
+    }
+
+        // 2) Отправка мейлов всем у кого включена настройка
     if (recipient) {
         try {
             // NOTE: GmailApp требует авторизации при первом использовании
             GmailApp.sendEmail(
                 recipient, // Получатель теперь может быть строкой из нескольких адресов через запятую
                 `СТАТУС : ${statusLabel}`,
-                `Порт зарядки на парковці був успішно змінено на : ${statusLabel}.`
+                `${formattedDateTime} - Порт зарядки на парковці був успішно змінено на : ${statusLabel}.`
             );
         } catch (error) {
             // Логирование ошибки отправки почты (не влияет на работу сайта)
             Logger.log("Помилка відправки пошти: " + error.toString());
         }
     }
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     
     return ContentService.createTextOutput("Port status updated");
-  }
+}
+
   
   const now = new Date();
   const formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), "dd.MM.yyyy HH:mm:ss");
