@@ -21,6 +21,7 @@
     </script>
   </head>
   <body>
+    <div id="logout-modal-placeholder"></div>
     <div class="container">
       <button class="menu-button" onclick="toggleMenu()">
         <svg
@@ -53,6 +54,8 @@
           />
         </svg>
       </button>
+
+      <div id="header-placeholder"></div>
 
       <div class="form-wrapper">
         <!-- Боковое меню зачитываем из utils.js-->
@@ -211,11 +214,7 @@
 
       // --- Инициализация ---
       window.addEventListener("DOMContentLoaded", async () => {
-        // Загрузка темы
-        if (localStorage.getItem("theme") === "dark") {
-          document.body.classList.add("dark");
-        }
-        await loadComponent("sidebar-placeholder", "sidebar.html");
+        await loadAppMenu();
         document.getElementById("buildVersion").textContent = BUILD_VERSION;
 
         // Запускаем проверку авторизации и роли

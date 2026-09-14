@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Preview: Start Server",
+      "type": "shell",
+      "command": "node scripts/dev-server.js",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "meter-form-preview",
+        "pattern": {
+          "regexp": "."
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Local:"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false
+      }
+    },
+    {
+      "label": "Preview: Open Site",
+      "dependsOn": "Preview: Start Server",
+      "type": "shell",
+      "command": "echo Open http://127.0.0.1:8000/index.html in Cursor Browser (Ctrl+Shift+P -> Open Browser)",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "close": true
+      }
+    }
+  ]
+}

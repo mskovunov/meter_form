@@ -116,11 +116,7 @@
       }
 
       window.addEventListener("DOMContentLoaded", async () => {
-        // Загрузка сохраненной темы
-        if (localStorage.getItem("theme") === "dark") {
-          document.body.classList.add("dark");
-        }
-        await loadComponent("sidebar-placeholder", "sidebar.html");
+        await loadAppMenu();
         populateMonthSelector();
         loadHistory(); // Загрузка истории для выбранного по умолчанию месяца
       });
@@ -141,6 +137,7 @@
     </script>
   </head>
   <body>
+    <div id="logout-modal-placeholder"></div>
     <div class="container">
       <button class="menu-button" onclick="toggleMenu()">
         <svg
@@ -173,6 +170,8 @@
           />
         </svg>
       </button>
+
+      <div id="header-placeholder"></div>
 
       <div class="form-wrapper">
         <!-- Боковое меню зачитываем из utils.js-->

@@ -25,6 +25,7 @@
     </script>
   </head>
   <body>
+    <div id="logout-modal-placeholder"></div>
     <div class="container">
       <button class="menu-button" onclick="toggleMenu()">
         <svg
@@ -58,31 +59,7 @@
         </svg>
       </button>
 
-      <div id="user-info-header">
-        <div id="user-info-wrapper" onclick="showUserProfile()">
-          <span id="user-email-display" title="Ваш користувач"></span>
-        </div>
-        <button
-          id="logout-inline-button"
-          onclick="handleLogout()"
-          title="Вийти з облікового запису"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
-        </button>
-      </div>
+      <div id="header-placeholder"></div>
 
       <div class="form-wrapper">
         <div id="sidebar-placeholder"></div>
@@ -503,16 +480,8 @@
           });
       }
 
-      // НОВАЯ ФУНКЦИЯ: Заглушка для клика по имени пользователя
-      function showUserProfile() {
-        //alert("Переход в профиль пользователя (заглушка)");
-        console.log("Clicked on user profile link.");
-      }
-
       window.addEventListener("DOMContentLoaded", async () => {
-        if (localStorage.getItem("theme") === "dark")
-          document.body.classList.add("dark");
-        await loadComponent("sidebar-placeholder", "sidebar.html");
+        await loadAppMenu();
         if (typeof BUILD_VERSION !== "undefined")
           document.getElementById("buildVersion").textContent = BUILD_VERSION;
         auth.onAuthStateChanged((user) => {
@@ -532,16 +501,6 @@
             isAdmin = true;
             document.getElementById("monitoring-section").style.display =
               "block";
-
-            // === ДОБАВЛЕНО: Отображаем email/имя в шапке ===
-            const username = doc.data().username || user.email;
-            document.getElementById("user-email-display").textContent =
-              username;
-            // ==============================================
-
-            // Показываем пункты меню
-            const adminMenuItem = document.getElementById("admin-menu-item");
-            if (adminMenuItem) adminMenuItem.style.display = "block";
 
             initPowerMonitor();
           } else {

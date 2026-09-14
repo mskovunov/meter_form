@@ -23,6 +23,83 @@ async function loadComponent(targetId, filePath) {
     }
 }
 
+function applySavedTheme() {
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+    }
+}
+
+function getCurrentPageName() {
+    const page = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+    return page || "index.html";
+}
+
+function markActiveMenuItem() {
+    const page = getCurrentPageName();
+    document.querySelectorAll(".side-menu a[href]").forEach((link) => {
+        const href = (link.getAttribute("href") || "").toLowerCase();
+        link.classList.toggle("active", href === page);
+    });
+}
+
+async function fetchUserProfile(user) {
+    if (!user || typeof db === "undefined") return {};
+    try {
+        const doc = await db.collection("users").doc(user.uid).get();
+        return doc.exists ? doc.data() : {};
+    } catch (error) {
+        console.error("Ошибка загрузки профиля пользователя:", error);
+        return {};
+    }
+}
+
+async function refreshAppMenu(user) {
+    const profile = user ? await fetchUserProfile(user) : {};
+    const isAdmin = profile.role === "admin";
+
+    document.querySelectorAll(".admin-menu-item").forEach((item) => {
+        item.hidden = !isAdmin;
+    });
+
+    const display = document.getElementById("user-email-display");
+    if (display) {
+        display.textContent = profile.username || (user && user.email) || "";
+    }
+
+    if (typeof window.onAppUserReady === "function" && user) {
+        window.onAppUserReady(user, profile);
+    }
+
+    return profile;
+}
+
+function bindMenuUserState() {
+    if (typeof auth === "undefined" || window._menuAuthBound) return;
+    window._menuAuthBound = true;
+    auth.onAuthStateChanged((user) => {
+        refreshAppMenu(user);
+    });
+}
+
+async function loadAppMenu() {
+    applySavedTheme();
+    if (document.getElementById("sidebar-placeholder")) {
+        await loadComponent("sidebar-placeholder", "sidebar.html");
+    }
+    if (document.getElementById("header-placeholder")) {
+        await loadComponent("header-placeholder", "header.html");
+    }
+    if (document.getElementById("logout-modal-placeholder")) {
+        await loadComponent("logout-modal-placeholder", "logout-modal.html");
+    }
+    markActiveMenuItem();
+    bindMenuUserState();
+}
+
+function showUserProfile() {
+    console.log("Clicked on user profile link.");
+}
+
 function toggleTheme() {
       const isDark = document.body.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');

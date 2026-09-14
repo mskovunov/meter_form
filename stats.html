@@ -6,13 +6,397 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
 
+    <script src="config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="./firebase-init.js"></script>
+    <script src="utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
-      window.addEventListener("DOMContentLoaded", async () => {
-        // Загрузка сохраненной темы
-        if (localStorage.getItem("theme") === "dark") {
-          document.body.classList.add("dark");
+      const DEFAULT_TARIFF = 9;
+      const USER_COLORS = {
+        eGolf: { color: "#4a90e2", bg: "rgba(74, 144, 226, 0.85)" },
+        iONIQ: { color: "#e67e22", bg: "rgba(230, 126, 34, 0.85)" },
+      };
+      const FALLBACK_COLORS = [
+        { color: "#8e44ad", bg: "rgba(142, 68, 173, 0.85)" },
+        { color: "#16a085", bg: "rgba(22, 160, 133, 0.85)" },
+      ];
+
+      let statsChart = null;
+      let currentMode = "kwh";
+      let currentPoints = [];
+      let selectedUser = "";
+
+      function getMonthList() {
+        const monthNames = [
+          "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+          "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень",
+        ];
+        const startDate = new Date(2025, 1, 1);
+        const currentDate = new Date();
+        currentDate.setDate(1);
+
+        const result = [];
+        while (currentDate >= startDate) {
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth();
+          const val = `${year}-${(month + 1).toString().padStart(2, "0")}`;
+          const txt = `${monthNames[month]} ${year}`;
+          result.push({ value: val, text: txt });
+          currentDate.setMonth(currentDate.getMonth() - 1);
         }
-        await loadComponent("sidebar-placeholder", "sidebar.html");
+        return result;
+      }
+
+      const MONTHS = getMonthList();
+
+      function populateMonthSelector() {
+        const selector = document.getElementById("monthSelector");
+        MONTHS.forEach((month) => {
+          const option = document.createElement("option");
+          option.value = month.value;
+          option.textContent = month.text;
+          selector.appendChild(option);
+        });
+        selector.value = MONTHS[0].value;
+      }
+
+      function parseNumber(value) {
+        const parsed = parseFloat(String(value).replace(",", "."));
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+
+      function formatNum(value, digits = 1) {
+        return Number(value).toLocaleString("uk-UA", {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        });
+      }
+
+      function parseHistoryAsStats(html, month) {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const rows = [...doc.querySelectorAll("tbody tr")];
+        const points = rows
+          .map((tr) => {
+            const cells = [...tr.querySelectorAll("td")].map((td) =>
+              td.textContent.trim()
+            );
+            const kwh = parseNumber(cells[4]);
+            return {
+              date: cells[0] || "",
+              time: "",
+              user: cells[1] || "",
+              kwh,
+              uah: kwh * DEFAULT_TARIFF,
+              tariff: DEFAULT_TARIFF,
+            };
+          })
+          .reverse();
+
+        const totals = points.reduce(
+          (acc, point) => {
+            acc.kwh += point.kwh;
+            acc.uah += point.uah;
+            acc.count += 1;
+            return acc;
+          },
+          { kwh: 0, uah: 0, count: 0 }
+        );
+
+        return { month, tariff: DEFAULT_TARIFF, points, totals };
+      }
+
+      async function fetchStats(month) {
+        const statsUrl = `${WEBAPP_URL}?stats=1&month=${encodeURIComponent(month)}`;
+        const statsResp = await fetch(statsUrl);
+        const statsText = await statsResp.text();
+
+        try {
+          const json = JSON.parse(statsText);
+          if (json && Array.isArray(json.points)) {
+            return json;
+          }
+        } catch (_) {
+          // Старый GAS ещё не задеплоен — берём историю
+        }
+
+        const histUrl = `${WEBAPP_URL}?history=1&month=${encodeURIComponent(month)}`;
+        const histResp = await fetch(histUrl);
+        const html = await histResp.text();
+        return parseHistoryAsStats(html, month);
+      }
+
+      function userName(point) {
+        return (point.user || "інше").trim() || "інше";
+      }
+
+      function uniqueUsers(points) {
+        const users = [];
+        const seen = new Set();
+        points.forEach((point) => {
+          const name = userName(point);
+          if (!seen.has(name)) {
+            seen.add(name);
+            users.push(name);
+          }
+        });
+        return users;
+      }
+
+      function uniqueDates(points) {
+        const dates = [];
+        const seen = new Set();
+        points.forEach((point) => {
+          if (!seen.has(point.date)) {
+            seen.add(point.date);
+            dates.push(point.date);
+          }
+        });
+        return dates;
+      }
+
+      function visiblePoints() {
+        if (!selectedUser) return currentPoints;
+        return currentPoints.filter((point) => userName(point) === selectedUser);
+      }
+
+      function totalsFor(points) {
+        return points.reduce(
+          (acc, point) => {
+            acc.kwh += point.kwh;
+            acc.uah += point.uah;
+            acc.count += 1;
+            return acc;
+          },
+          { kwh: 0, uah: 0, count: 0 }
+        );
+      }
+
+      function colorForUser(name, index) {
+        return USER_COLORS[name] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+      }
+
+      function seriesForUser(name, dates, index) {
+        const colors = colorForUser(name, index);
+        const isUah = currentMode === "uah";
+        const data = dates.map((date) => {
+          const dayPoints = currentPoints.filter(
+            (point) => userName(point) === name && point.date === date
+          );
+          if (!dayPoints.length) return null;
+          return dayPoints.reduce(
+            (sum, point) => sum + (isUah ? point.uah : point.kwh),
+            0
+          );
+        });
+
+        return {
+          label: name,
+          data,
+          borderColor: colors.color,
+          backgroundColor: colors.bg,
+          borderWidth: 0,
+          borderRadius: 4,
+          maxBarThickness: 22,
+          skipNull: true,
+        };
+      }
+
+      function getChartTheme() {
+        const isDark = document.body.classList.contains("dark");
+        return {
+          grid: isDark ? "#444" : "#e6e6e6",
+          text: isDark ? "#ccc" : "#666",
+        };
+      }
+
+      function applyChartTheme() {
+        if (!statsChart) return;
+        const theme = getChartTheme();
+        statsChart.options.plugins.legend.labels.color = theme.text;
+        statsChart.options.scales.x.ticks.color = theme.text;
+        statsChart.options.scales.y.ticks.color = theme.text;
+        statsChart.options.scales.y.grid.color = theme.grid;
+        statsChart.update();
+      }
+
+      function ensureChart() {
+        if (statsChart && statsChart.config.type !== "bar") {
+          statsChart.destroy();
+          statsChart = null;
+        }
+        if (statsChart) return statsChart;
+
+        const ctx = document.getElementById("statsChart").getContext("2d");
+        const theme = getChartTheme();
+
+        statsChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: [],
+            datasets: [],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: "index" },
+            plugins: {
+              legend: {
+                display: true,
+                position: "bottom",
+                labels: { color: theme.text, boxWidth: 12 },
+              },
+              tooltip: {
+                callbacks: {
+                  title(items) {
+                    const date = uniqueDates(visiblePoints())[items[0].dataIndex];
+                    return date || items[0].label;
+                  },
+                  label(item) {
+                    if (item.parsed.y == null) return null;
+                    const suffix = currentMode === "uah" ? " грн" : " кВт·год";
+                    return `${item.dataset.label}: ${formatNum(item.parsed.y, currentMode === "uah" ? 2 : 1)}${suffix}`;
+                  },
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: { color: theme.text, maxRotation: 0, autoSkip: true },
+                grid: { display: false },
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: theme.text },
+                grid: { color: theme.grid },
+              },
+            },
+          },
+        });
+
+        return statsChart;
+      }
+
+      function updateChart() {
+        const chart = ensureChart();
+        const points = visiblePoints();
+        const dates = uniqueDates(points);
+        const users = uniqueUsers(points);
+
+        chart.data.labels = dates.map((date) => date.slice(0, 5));
+        chart.data.datasets = users.map((name, index) =>
+          seriesForUser(name, dates, index)
+        );
+        chart.update();
+      }
+
+      function renderUserFilter() {
+        const wrap = document.getElementById("statsUsers");
+        const users = uniqueUsers(currentPoints);
+        if (users.length < 2) {
+          wrap.hidden = true;
+          wrap.innerHTML = "";
+          selectedUser = "";
+          return;
+        }
+
+        wrap.hidden = false;
+        const buttons = [
+          { value: "", label: "Усі" },
+          ...users.map((name) => ({ value: name, label: name })),
+        ];
+        wrap.innerHTML = buttons
+          .map(
+            (btn) =>
+              `<button type="button" class="stats-user-btn${
+                btn.value === selectedUser ? " is-active" : ""
+              }" data-user="${btn.value}" onclick="setStatsUser(this.dataset.user)">${btn.label}</button>`
+          )
+          .join("");
+      }
+
+      window.setStatsUser = function (user) {
+        selectedUser = user || "";
+        renderUserFilter();
+        renderTotals(totalsFor(visiblePoints()));
+        updateChart();
+      };
+
+      window.setChartMode = function (mode) {
+        currentMode = mode;
+        document.querySelectorAll(".stats-card[data-mode]").forEach((card) => {
+          card.classList.toggle("is-active", card.dataset.mode === mode);
+        });
+        updateChart();
+      };
+
+      function renderTotals(totals) {
+        const avg = totals.count ? totals.kwh / totals.count : 0;
+        document.getElementById("stat-kwh").textContent = formatNum(totals.kwh, 1);
+        document.getElementById("stat-uah").textContent = formatNum(totals.uah, 2);
+        document.getElementById("stat-count").textContent = String(totals.count);
+        document.getElementById("stat-avg").textContent = formatNum(avg, 1);
+      }
+
+      function resetTotals() {
+        ["stat-kwh", "stat-uah", "stat-count", "stat-avg"].forEach((id) => {
+          document.getElementById(id).textContent = "--";
+        });
+      }
+
+      async function loadStats() {
+        const statusDiv = document.getElementById("loadingStatus");
+        const emptyDiv = document.getElementById("statsEmpty");
+        const chartWrap = document.getElementById("statsChartWrap");
+        const monthSelector = document.getElementById("monthSelector");
+        const selectedMonth = monthSelector.value;
+        const monthName = monthSelector.options[monthSelector.selectedIndex].text;
+
+        resetTotals();
+        emptyDiv.hidden = true;
+        chartWrap.hidden = true;
+        statusDiv.style.display = "block";
+        statusDiv.innerHTML = `<span class="inline-spinner-wrapper">
+                                 <span class="inline-spinner"></span>
+                                 Завантаження статистики за ${monthName}...
+                               </span>`;
+
+        try {
+          const data = await fetchStats(selectedMonth);
+          currentPoints = data.points || [];
+          selectedUser = "";
+          renderUserFilter();
+          renderTotals(totalsFor(visiblePoints()));
+          statusDiv.style.display = "none";
+
+          if (!currentPoints.length) {
+            emptyDiv.hidden = false;
+            emptyDiv.textContent = `Записів за ${monthName} не знайдено.`;
+            return;
+          }
+
+          chartWrap.hidden = false;
+          updateChart();
+          if (statsChart) statsChart.resize();
+        } catch (err) {
+          statusDiv.innerHTML = "<p>⚠️ Помилка при завантаженні статистики.</p>";
+          console.error("Помилка статистики:", err);
+        }
+      }
+
+      window.addEventListener("DOMContentLoaded", async () => {
+        await loadAppMenu();
+        populateMonthSelector();
+        loadStats();
+
+        const originalToggleTheme = window.toggleTheme;
+        window.toggleTheme = function () {
+          originalToggleTheme();
+          applyChartTheme();
+        };
       });
     </script>
     <!-- Google tag (gtag.js) -->
@@ -31,6 +415,7 @@
     </script>
   </head>
   <body>
+    <div id="logout-modal-placeholder"></div>
     <div class="container">
       <button class="menu-button" onclick="toggleMenu()">
         <svg
@@ -64,49 +449,81 @@
         </svg>
       </button>
 
+      <div id="header-placeholder"></div>
+
       <div class="form-wrapper">
-        <!-- Боковое меню зачитываем из utils.js-->
         <div id="sidebar-placeholder"></div>
 
-        <h2>Динаміка споживання (грн/кВт)</h2>
+        <h2>Статистика споживання</h2>
 
-        <div class="chart-container-scroll">
-          <iframe
-            width="1000px"
-            height="600"
-            seamless
-            frameborder="0"
-            scrolling="no"
-            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS_qJElkXRDX_zVtDHpMVcclSpo2KRNef03sZ_kbfrEbdO-C8XvqSvJyLzXwmLNfSHHVkCD0RA5Kbsy/pubchart?oid=268230450&amp;format=interactive"
-          ></iframe>
+        <div class="stats-period">
+          <label for="monthSelector">Вибрати період:</label>
+          <select id="monthSelector" onchange="loadStats()"></select>
+        </div>
+
+        <div id="statsUsers" class="stats-users" hidden></div>
+
+        <div class="stats-cards">
+          <button
+            type="button"
+            class="stats-card is-active"
+            data-mode="kwh"
+            onclick="setChartMode('kwh')"
+          >
+            <h3>Спожито</h3>
+            <div class="value">
+              <span id="stat-kwh">--</span>
+              <span class="unit">кВт·год</span>
+            </div>
+          </button>
+          <button
+            type="button"
+            class="stats-card"
+            data-mode="uah"
+            onclick="setChartMode('uah')"
+          >
+            <h3>Вартість</h3>
+            <div class="value">
+              <span id="stat-uah">--</span>
+              <span class="unit">грн</span>
+            </div>
+          </button>
+          <div class="stats-card stats-card--static">
+            <h3>Заряджань</h3>
+            <div class="value"><span id="stat-count">--</span></div>
+          </div>
+          <div class="stats-card stats-card--static">
+            <h3>Середнє</h3>
+            <div class="value">
+              <span id="stat-avg">--</span>
+              <span class="unit">кВт·год</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="loadingStatus"
+          style="display: none; text-align: center; padding: 20px"
+        ></div>
+        <p id="statsEmpty" class="stats-empty" hidden></p>
+
+        <div id="statsChartWrap" class="stats-chart-wrap" hidden>
+          <canvas id="statsChart"></canvas>
         </div>
       </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="./firebase-init.js"></script>
-    <script src="utils.js"></script>
-
     <script>
-      // Проверка статуса авторизации при загрузке страницы
       auth.onAuthStateChanged((user) => {
         if (!user) {
-          // Если пользователь НЕ авторизован
           console.log(
             "Пользователь не авторизован. Перенаправление на страницу входа."
           );
-          // Перенаправить на страницу входа
           window.location.replace("auth.html");
         } else {
-          // Пользователь авторизован
           console.log("Пользователь авторизован как:", user.email);
-          // Здесь можно выполнять код для авторизованных пользователей (например, загрузку данных из Firestore)
         }
       });
-
-      // // (Ваш существующий код для загрузки данных из GAS должен быть ниже этого блока)
     </script>
   </body>
 </html>

@@ -4,6 +4,7 @@
  * 1. getLast: Получение последнего показателя (для поля "Було").
  * 2. getPortStatus: Получение статуса порта зарядки из H1.
  * 3. history: Получение отфильтрованной истории показаний.
+ * 4. stats: JSON-агрегация за месяц для графиков статистики.
  */
 function doGet(e) {
   const sheet = SpreadsheetApp.openById("1HgJDnd3ua_Z7OFU1nSEW1jaHVgiFzx_FBthYTnPMaxo")
@@ -107,8 +108,91 @@ function doGet(e) {
     return ContentService.createTextOutput(html).setMimeType(ContentService.MimeType.TEXT);
   }
 
+  // Статистика — JSON для графиков
+  if (e.parameter.stats) {
+    const now = new Date();
+    let filterYear = now.getFullYear();
+    let filterMonth = now.getMonth();
+    const monthParam = e.parameter.month;
+
+    if (monthParam && monthParam.length === 7 && monthParam.includes('-')) {
+      const parts = monthParam.split('-');
+      filterYear = parseInt(parts[0], 10);
+      filterMonth = parseInt(parts[1], 10) - 1;
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+      return jsonOutput({
+        month: monthParam || Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM"),
+        tariff: 9,
+        points: [],
+        totals: { kwh: 0, uah: 0, count: 0 }
+      });
+    }
+
+    const data = sheet.getRange("A2:G" + lastRow).getValues();
+    const points = data
+      .map(row => {
+        const rawDate = row[0];
+        const parsedDate = (rawDate instanceof Date) ? rawDate : new Date(rawDate);
+        const kwh = toNumber(row[4]);
+        const tariff = toNumber(row[5]) || 9;
+        const uah = toNumber(row[6]) || (kwh * tariff);
+
+        return {
+          dateObj: parsedDate,
+          date: Utilities.formatDate(parsedDate, Session.getScriptTimeZone(), "dd.MM.yyyy"),
+          time: Utilities.formatDate(parsedDate, Session.getScriptTimeZone(), "HH:mm"),
+          user: row[1] || '',
+          kwh: kwh,
+          uah: uah,
+          tariff: tariff
+        };
+      })
+      .filter(row => {
+        return (
+          !isNaN(row.dateObj.getTime()) &&
+          row.dateObj.getFullYear() === filterYear &&
+          row.dateObj.getMonth() === filterMonth
+        );
+      })
+      .sort((a, b) => a.dateObj - b.dateObj)
+      .map(row => {
+        delete row.dateObj;
+        return row;
+      });
+
+    const totals = points.reduce((acc, point) => {
+      acc.kwh += point.kwh;
+      acc.uah += point.uah;
+      acc.count += 1;
+      return acc;
+    }, { kwh: 0, uah: 0, count: 0 });
+
+    return jsonOutput({
+      month: monthParam || Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM"),
+      tariff: 9,
+      points: points,
+      totals: totals
+    });
+  }
+
   // По умолчанию
   return HtmlService.createHtmlOutput('Web App працює');
+}
+
+function toNumber(value) {
+  if (typeof value === 'number' && !isNaN(value)) return value;
+  if (value === '' || value == null) return 0;
+  const parsed = parseFloat(String(value).replace(',', '.'));
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+function jsonOutput(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**

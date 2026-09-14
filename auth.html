@@ -421,7 +421,7 @@
           document.body.classList.add("dark");
         }
 
-        await loadComponent("sidebar-placeholder", "sidebar.html");
+        await loadAppMenu();
 
         if (typeof auth === "undefined") {
           document.getElementById("loading-status").innerHTML =
