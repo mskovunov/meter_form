@@ -229,107 +229,210 @@ button:hover {
 }
 
 .port-status-block {
+  --port-accent: #2e7d32;
+  --port-accent-soft: rgba(46, 125, 50, 0.14);
+  --port-ring: rgba(46, 125, 50, 0.35);
+  position: relative;
   border: 1px solid var(--input-border);
-  border-radius: 12px;
-  padding: 15px 16px;
-  background-color: var(--input-bg);
+  border-radius: 16px;
+  padding: 16px;
+  background: linear-gradient(
+    160deg,
+    var(--port-accent-soft) 0%,
+    var(--input-bg) 55%
+  );
   margin-bottom: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
-.port-status-block h3 {
-  font-size: 1rem;
-  margin-bottom: 12px;
-  color: var(--text-color);
-  font-weight: 600;
+.port-status-block.is-busy {
+  --port-accent: #c62828;
+  --port-accent-soft: rgba(198, 40, 40, 0.14);
+  --port-ring: rgba(198, 40, 40, 0.35);
 }
 
 .port-status-content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 14px;
-  flex-wrap: wrap;
 }
 
-.port-indicator {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: #2e7d32; /* default green */
+.port-status-header {
   display: flex;
-  justify-content: center;
   align-items: center;
-  transition: background-color 0.3s;
-  padding: 6px;
-  box-sizing: border-box;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.port-icon {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  filter: brightness(1);
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 52px;
-  height: 28px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: 0.3s;
-  border-radius: 28px;
-}
-
-.slider::before {
-  position: absolute;
-  content: "";
-  height: 22px;
-  width: 22px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.3s;
-  border-radius: 50%;
-}
-
-.switch input:checked + .slider {
-  background-color: var(--button-bg);
-}
-
-.switch input:checked + .slider::before {
-  transform: translateX(24px);
-}
-
-#portStatusText {
-  min-width: 80px;
-  font-size: 1rem;
+.port-status-title {
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--text-color);
 }
 
-.port-toggle-wrapper {
+.port-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--port-accent);
+  background: var(--port-accent-soft);
+  border: 1px solid var(--port-ring);
+  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+.port-status-main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 10px;
+  padding: 4px 0 2px;
 }
 
-.port-status-label {
-  font-size: 0.95rem;
-  color: var(--text-color);
+.port-indicator {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.35),
+    var(--port-accent) 68%
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.35s ease, transform 0.25s ease;
+  box-shadow: 0 8px 20px var(--port-ring);
+}
+
+.port-indicator-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--port-ring);
+  animation: portPulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+.port-status-block.is-busy .port-indicator-ring {
+  animation: none;
+  opacity: 0.55;
+}
+
+@keyframes portPulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+
+.port-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  position: relative;
+  z-index: 1;
+}
+
+.port-status-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #888;
   text-align: center;
+}
+
+.port-slide-bar {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: 100%;
+  margin: 0;
+  margin-top: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: inherit;
+  font: inherit;
+  font-size: inherit;
+  transform: none;
+}
+
+.port-slide-bar:hover {
+  background: none;
+  background-color: transparent;
+  transform: none;
+}
+
+.port-slide-bar:focus-visible .port-slide-track {
+  outline: 2px solid var(--button-bg);
+  outline-offset: 2px;
+}
+
+.port-slide-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  min-height: 48px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--bg-color);
+  border: 1px solid var(--input-border);
+  overflow: hidden;
+}
+
+.port-slide-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 6px);
+  height: calc(100% - 8px);
+  border-radius: 10px;
+  background: var(--port-accent);
+  box-shadow: 0 4px 14px var(--port-ring);
+  transition: left 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.35s ease, box-shadow 0.35s ease;
+  z-index: 0;
+}
+
+.port-status-block.is-busy .port-slide-thumb {
+  left: calc(50% + 2px);
+}
+
+.port-slide-label {
+  position: relative;
+  z-index: 1;
+  padding: 10px 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  color: #888;
+  transition: color 0.3s ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+.port-status-block.is-available .port-slide-label--left,
+.port-status-block.is-busy .port-slide-label--right {
+  color: #fff;
 }
 
 label {
@@ -720,14 +823,13 @@ button.stats-card:hover {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 80px; /* Занимает высоту блока порта */
+        min-height: 100%;
         width: 100%;
         position: absolute;
-        top: 0;
-        left: 0;
-        background-color: var(--input-bg, #fff); /* Фон, чтобы скрыть содержимое */
+        inset: 0;
+        background-color: var(--input-bg, #fff);
         z-index: 10;
-        border-radius: 12px;
+        border-radius: 16px;
     }
 
     /* Анимация крутящегося колеса (Spinner) */

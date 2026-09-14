@@ -38,26 +38,42 @@
 	
     <h2>Форма для передачі показників лічильника</h2>
 
-<label>🔌 Статус порта зарядки: </label>
-<div class="port-status-block"> 
-  
-  <!-- ДОБАВЛЕНИЕ 1: Элемент загрузки (отображается по умолчанию) -->
+<div class="port-status-block is-available" id="portStatusBlock">
   <div class="status-loader-wrapper" id="portLoader">
-      <div class="status-loader"></div>
+    <div class="status-loader"></div>
   </div>
-  
+
   <div class="port-status-content">
-    <div class="port-indicator" id="portIndicator">
-      <img src="img/Type_2_transp.png" alt="Type-2 порт" class="port-icon">
+    <div class="port-status-header">
+      <span class="port-status-title">🔌 Порт зарядки</span>
+      <span class="port-status-pill" id="portStatusPill">Доступний</span>
     </div>
-    
-  <div class="port-toggle-wrapper">
-    <label class="switch">
-      <input type="checkbox" id="portToggle" onchange="togglePortStatus()">
-      <span class="slider"></span>
-    </label>
-    <div id="portStatusText" class="port-status-label">Доступний</div>
-  </div>
+
+    <div class="port-status-main">
+      <div class="port-indicator" id="portIndicator">
+        <span class="port-indicator-ring" aria-hidden="true"></span>
+        <img src="img/Type_2_transp.png" alt="Type-2 порт" class="port-icon">
+      </div>
+      <p class="port-status-hint" id="portStatusHint">
+        Порт вільний для зарядки
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="port-slide-bar"
+      id="portSlideToggle"
+      aria-pressed="false"
+      aria-label="Статус порта зарядки"
+      onclick="togglePortSlide()"
+    >
+      <span class="port-slide-track">
+        <span class="port-slide-thumb" aria-hidden="true"></span>
+        <span class="port-slide-label port-slide-label--left">Доступний</span>
+        <span class="port-slide-label port-slide-label--right">Зайнятий</span>
+      </span>
+    </button>
+    <input type="checkbox" id="portToggle" hidden aria-hidden="true" tabindex="-1">
   </div>
 </div>
 	
@@ -202,13 +218,27 @@
 
 	
 function updatePortToggleUI(status) {
+  const isBusy = status === "busy";
+  const block = document.getElementById("portStatusBlock");
   const toggle = document.getElementById("portToggle");
-  const text = document.getElementById("portStatusText");
-  const indicator = document.getElementById("portIndicator");
+  const pill = document.getElementById("portStatusPill");
+  const hint = document.getElementById("portStatusHint");
+  const slide = document.getElementById("portSlideToggle");
 
-  toggle.checked = status === "busy"; // ВКЛ означает busy
-  text.textContent = status === "busy" ? "Зайнятий" : "Доступний";
-  indicator.style.backgroundColor = status === "busy" ? "#c62828" : "#2e7d32";
+  toggle.checked = isBusy;
+  block.classList.toggle("is-busy", isBusy);
+  block.classList.toggle("is-available", !isBusy);
+  slide.setAttribute("aria-pressed", String(isBusy));
+  pill.textContent = isBusy ? "Зайнятий" : "Доступний";
+  hint.textContent = isBusy
+    ? "Порт позначено як зайнятий"
+    : "Порт вільний для зарядки";
+}
+
+function togglePortSlide() {
+  const toggle = document.getElementById("portToggle");
+  toggle.checked = !toggle.checked;
+  togglePortStatus();
 }
 
     function togglePortStatus() {
